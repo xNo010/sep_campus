@@ -36,6 +36,8 @@ COORD SavePosition;
 COORD NextPosition;
 short OpenDirection;	// 進行方向
 
+short LoopTimes;		// ループ回数
+
 bool itido;
 
 void Draw();

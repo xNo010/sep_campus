@@ -6,7 +6,7 @@
 
 void Maze01();
 void Initialize_01();
-void WallCreation(short Map[][MAP_SIZE_X], short x, short y);
+void WallCreation_01(short Map[][MAP_SIZE_X], short x, short y);
 void StartFixed_01(short Map[][MAP_SIZE_X]);
 void GoalFixed_01(short Map[][MAP_SIZE_X]);
 
