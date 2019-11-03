@@ -1,0 +1,114 @@
+void Maze01()
+{
+	// 初期化
+	Initialize_01();
+
+	// --- マップ自動生成 ---
+	// x:2～13 * 2(偶数)
+	// y:2～13 * 2(偶数)
+	FirstPosition.X = (rand() % (MAP_SIZE_X - 18) + 2) * 2;
+	FirstPosition.Y = (rand() % (MAP_SIZE_Y - 18) + 2) * 2;
+
+	for (short j = 2; j < MAP_SIZE_Y - 3; j += 2)
+	{
+		for (short i = 2; i < MAP_SIZE_X - 3; i += 2)
+		{
+			FirstPosition.X = i;
+			FirstPosition.Y = j;
+			WallCreation_01(MazeMap, FirstPosition.X, FirstPosition.Y);
+		}
+	}
+
+	// スタートとゴールの指定
+	//StartFixed(MazeMap);
+	//GoalFixed(MazeMap);
+
+	// 描画
+	Draw();
+}
+
+void Initialize_01()
+{
+	// マップ
+	for (short i = 0; i < MAP_SIZE_Y; i++)
+	{
+		for (short j = 0; j < MAP_SIZE_X; j++)
+		{
+			// 壁をマップの端に初期で配置する
+			if (i == 0 || j == 0 || i == MAP_SIZE_Y - 1 || j == MAP_SIZE_X - 1)
+			{
+				MazeMap[i][j] = EChip::Chip_Wall;
+			}
+			else
+			{
+				MazeMap[i][j] = EChip::Chip_Path;
+			}
+		}
+	}
+
+	FirstPosition.X = FirstPosition.Y = 0;
+}
+
+void WallCreation_01(short Map[][MAP_SIZE_X], short x, short y)
+{
+	if (Map[y][x] != EChip::Chip_Path)
+	{
+		return;
+	}
+	// ランダムな場所に壁を配置
+	Map[y][x] = EChip::Chip_Wall;
+
+	// 生成方向の決定
+	short Direction = rand() % 3;//EDirection::Dir_Max;
+
+	// それぞれ2マス先を見て、道であれば隣に壁を生成する
+	switch (Direction)
+	{
+	case EDirection::Dir_Left:
+		if (Map[y][x - 2] == EChip::Chip_Path)
+		{
+			Map[y][x - 1] = EChip::Chip_Wall;
+			WallCreation_01(Map, x - 2, y);
+		}
+		else if (Map[y][x - 2] == EChip::Chip_Wall)
+		{
+			Map[y][x - 1] = EChip::Chip_Wall;
+		}
+		break;
+	case EDirection::Dir_Up:
+		if (Map[y - 2][x] == EChip::Chip_Path)
+		{
+			Map[y - 1][x] = EChip::Chip_Wall;
+			WallCreation_01(Map, x, y - 2);
+		}
+		else if (Map[y - 2][x] == EChip::Chip_Wall)
+		{
+			Map[y - 1][x] = EChip::Chip_Wall;
+		}
+		break;
+	case EDirection::Dir_Right:
+		if (Map[y][x + 2] == EChip::Chip_Path)
+		{
+			Map[y][x + 1] = EChip::Chip_Wall;
+			WallCreation_01(Map, x + 2, y);
+		}
+		else if (Map[y][x + 2] == EChip::Chip_Wall)
+		{
+			Map[y][x + 1] = EChip::Chip_Wall;
+		}
+		break;
+	case EDirection::Dir_Down:
+		if (Map[y + 2][x] == EChip::Chip_Path)
+		{
+			Map[y + 1][x] = EChip::Chip_Wall;
+			WallCreation_01(Map, x, y + 2);
+		}
+		else if (Map[y + 2][x] == EChip::Chip_Wall)
+		{
+			Map[y + 2][x] = EChip::Chip_Wall;
+		}
+		break;
+	default:
+		break;
+	}
+}
