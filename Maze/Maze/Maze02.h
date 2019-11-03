@@ -6,7 +6,7 @@
 
 void Maze02();
 void Initialize_02();
-void PathCreate(short Map[][MAP_SIZE_X], COORD Position);
+void PathCreate_02(short Map[][MAP_SIZE_X], COORD Position);
 void StartFixed_02(short Map[][MAP_SIZE_X]);
 void GoalFixed_02(short Map[][MAP_SIZE_X], COORD Position);
 

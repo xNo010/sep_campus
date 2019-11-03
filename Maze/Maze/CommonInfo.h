@@ -13,6 +13,7 @@
 
 enum EChip
 {
+	Chip_None,	// 要素なし
 	Chip_Path,	// 通路
 	Chip_Wall,	// 壁
 	Chip_Start,	// スタート地点

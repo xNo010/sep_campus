@@ -12,35 +12,6 @@ int main()
 	Maze02();
 }
 
-void Maze01()
-{
-	// 初期化
-	Initialize_01();
-
-	// --- マップ自動生成 ---
-	// x:2～13 * 2(偶数)
-	// y:2～13 * 2(偶数)
-	FirstPosition.X = (rand() % (MAP_SIZE_X - 18) + 2) * 2;
-	FirstPosition.Y = (rand() % (MAP_SIZE_Y - 18) + 2) * 2;
-
-	for (short j = 2; j < MAP_SIZE_Y - 3; j += 2)
-	{
-		for (short i = 2; i < MAP_SIZE_X - 3; i += 2)
-		{
-			FirstPosition.X = i;
-			FirstPosition.Y = j;
-			WallCreation_01(MazeMap, FirstPosition.X, FirstPosition.Y);
-		}
-	}
-
-	// スタートとゴールの指定
-	//StartFixed(MazeMap);
-	//GoalFixed(MazeMap);
-
-	// 描画
-	Draw();
-}
-
 void Maze02()
 {
 	Initialize_02();
@@ -60,47 +31,24 @@ void Maze02()
 
 	// 最初の道を作る 1.
 	// 1.ループ回数で最初かそれ以外か判断
-	// 四方向を見て全て道であれば作れないこと(FALSE)を返す関数を作る
+	// 四方向を見て作れるかどうか(TRUE/FALSE)を返す関数を作る
 	while (itido)
 	{
 		if (LoopTimes == 0)
 		{
-			// ゴールから道を生成
-			PathCreate(MazeMap, FirstPosition);
+			// ゴールから二マス分道を生成
+			PathCreate_02(MazeMap, FirstPosition);
 		}
 		else
 		{
 			// if (CheckIfCreatable(MazeMap, NextPosition))
 			// {
-			// 	PathCreate(MazeMap, NextPosition);
+			//	  // 次の座標から見て道を生成を繰り返す
+			//	  PathCreate(MazeMap, NextPosition);
 			// }
 			// else
 			{
 				itido = FALSE;
-				//// 乱数を再生成
-				//// x:((0～12) + 2) * 2(偶数)
-				//// y:((0～12) + 2) * 2(偶数)
-				//NextPosition.X = (rand() % (MAP_SIZE_X - 17) + 2) * 2;
-				//NextPosition.Y = (rand() % (MAP_SIZE_Y - 17) + 2) * 2;
-				//if (NextPosition.X == MAP_SIZE_X - 2)
-				//{
-				//	// マップを超えないよう1下げる
-				//	NextPosition.X = MAP_SIZE_X - 3;
-				//}
-				//if (NextPosition.Y == MAP_SIZE_Y - 2)
-				//{
-				//	// マップを超えないよう1下げる
-				//	NextPosition.Y = MAP_SIZE_Y - 3;
-				//}
-				//
-				//// そこが「ゴールでなく、すでに作られた道」となっている場所であれば
-				//if (SearchedMap[NextPosition.Y][NextPosition.X] != EChip::Chip_Goal ||
-				//	SearchedMap[NextPosition.Y][NextPosition.X] == EChip::Chip_Path)
-				//{
-				//	// そこから迷路の生成を再開
-				//	PathCreate(MazeMap, NextPosition);
-				//	itido = FALSE;
-				//}
 			}
 		}
 		LoopTimes++;
@@ -108,30 +56,6 @@ void Maze02()
 
 	// 描画
 	Draw();
-
-	int a = 0;
-}
-
-void Initialize_01()
-{
-	// マップ
-	for (short i = 0; i < MAP_SIZE_Y; i++)
-	{
-		for (short j = 0; j < MAP_SIZE_X; j++)
-		{
-			// 壁をマップの端に初期で配置する
-			if (i == 0 || j == 0 || i == MAP_SIZE_Y - 1 || j == MAP_SIZE_X - 1)
-			{
-				MazeMap[i][j] = EChip::Chip_Wall;
-			}
-			else
-			{
-				MazeMap[i][j] = EChip::Chip_Path;
-			}
-		}
-	}
-
-	FirstPosition.X = FirstPosition.Y = 0;
 }
 
 void Initialize_02()
@@ -142,14 +66,15 @@ void Initialize_02()
 		for (short j = 0; j < MAP_SIZE_X; j++)
 		{
 			// 初期値は端に道を配置する
-			if (i == 0 || j == 0 || i == MAP_SIZE_Y - 1 || j == MAP_SIZE_X - 1)
-			{
-				MazeMap[i][j] = EChip::Chip_Path;
-			}
-			else
+			//if (i == 0 || j == 0 || i == MAP_SIZE_Y - 1 || j == MAP_SIZE_X - 1)
+			//{
+			//	MazeMap[i][j] = EChip::Chip_Path;
+			//}
+			//else
 			{
 				MazeMap[i][j] = EChip::Chip_Wall;
 			}
+
 
 			SearchedMap[i][j] = EChip::Chip_Wall;
 		}
@@ -165,77 +90,14 @@ void Initialize_02()
 	itido = TRUE;
 }
 
-void WallCreation_01(short Map[][MAP_SIZE_X], short x, short y)
-{
-	if (Map[y][x] != EChip::Chip_Path)
-	{
-		return;
-	}
-	// ランダムな場所に壁を配置
-	Map[y][x] = EChip::Chip_Wall;
-
-	// 生成方向の決定
-	short Direction = rand() % 3;//EDirection::Dir_Max;
-
-	// それぞれ2マス先を見て、道であれば隣に壁を生成する
-	switch (Direction)
-	{
-	case EDirection::Dir_Left:
-		if (Map[y][x - 2] == EChip::Chip_Path)
-		{
-			Map[y][x - 1] = EChip::Chip_Wall;
-			WallCreation_01(Map, x - 2, y);
-		}
-		else if (Map[y][x - 2] == EChip::Chip_Wall)
-		{
-			Map[y][x - 1] = EChip::Chip_Wall;
-		}
-		break;
-	case EDirection::Dir_Up:
-		if (Map[y - 2][x] == EChip::Chip_Path)
-		{
-			Map[y - 1][x] = EChip::Chip_Wall;
-			WallCreation_01(Map, x, y - 2);
-		}
-		else if (Map[y - 2][x] == EChip::Chip_Wall)
-		{
-			Map[y - 1][x] = EChip::Chip_Wall;
-		}
-		break;
-	case EDirection::Dir_Right:
-		if (Map[y][x + 2] == EChip::Chip_Path)
-		{
-			Map[y][x + 1] = EChip::Chip_Wall;
-			WallCreation_01(Map, x + 2, y);
-		}
-		else if (Map[y][x + 2] == EChip::Chip_Wall)
-		{
-			Map[y][x + 1] = EChip::Chip_Wall;
-		}
-		break;
-	case EDirection::Dir_Down:
-		if (Map[y + 2][x] == EChip::Chip_Path)
-		{
-			Map[y + 1][x] = EChip::Chip_Wall;
-			WallCreation_01(Map, x, y + 2);
-		}
-		else if (Map[y + 2][x] == EChip::Chip_Wall)
-		{
-			Map[y + 2][x] = EChip::Chip_Wall;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
+void PathCreate_02(short Map[][MAP_SIZE_X], COORD Position)
 {
 	// while文の条件用
 	short SaveDirection = 0;
 	bool ReCreateFlag = TRUE;
 	short LoopCount = 0;		// 無限ループ対策
-	COORD StartPosMax = {24, 24};
+	COORD StartPosMin = { 0, 0 };	// 座標最小値
+	COORD StartPosMax = {28, 28};	// 座標最大値
 	// ループ用変数
 	short j;	// 横
 	short i;	// 縦
@@ -253,8 +115,8 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 		switch (OpenDirection)
 		{
 		case EDirection::Dir_Left:
-			// 前回の座標と同じであれば処理を飛ばす
-			if (Map[Position.Y][Position.X - 2] == Map[SavePosition.Y][SavePosition.X])
+			// 左端にいるのであれば処理を飛ばす
+			if (Position.X == StartPosMin.X)
 			{
 				ReCreateFlag = TRUE;
 				break;
@@ -280,8 +142,8 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 			}
 			break;
 		case EDirection::Dir_Up:
-			// 前回の座標と同じであれば処理を飛ばす
-			if (Map[Position.Y - 2][Position.X] == Map[SavePosition.Y][SavePosition.X])
+			// 一番上にいるのであれば処理を飛ばす
+			if (Position.Y == StartPosMin.Y)
 			{
 				ReCreateFlag = TRUE;
 				break;
@@ -307,8 +169,8 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 			}
 			break;
 		case EDirection::Dir_Right:
-			// 前回の座標と同じであれば処理を飛ばす
-			if (Map[Position.Y][Position.X + 2] == Map[SavePosition.Y][SavePosition.X])
+			// 右の最大値にいるのであれば処理を飛ばす
+			if (Position.X == StartPosMax.X)
 			{
 				ReCreateFlag = TRUE;
 				break;
@@ -335,7 +197,7 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 			break;
 		case EDirection::Dir_Down:
 			// 前回の座標と同じであれば処理を飛ばす
-			if (Map[Position.Y + 2][Position.X] == Map[SavePosition.Y][SavePosition.X])
+			if (Position.Y == StartPosMax.Y)
 			{
 				ReCreateFlag = TRUE;
 				break;
@@ -373,7 +235,7 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 			// 乱数再生成
 			//OpenDirection = rand() % EDirection::Dir_Max;
 
-			// 一巡した場合
+			// 元の座標(保存していた座標)に戻ってきたら(一巡した場合)
 			if (SaveDirection == OpenDirection)
 			{
 				printf("一巡したので終わり\n");
@@ -390,14 +252,14 @@ void PathCreate(short Map[][MAP_SIZE_X], COORD Position)
 
 		// 最後にポジションの調整
 		// 28から始まると配列外に出てしまう可能性がある
-		if (NextPosition.X == StartPosMax.X)
-		{
-			NextPosition.X = StartPosMax.X - 2;
-		}
-		if (NextPosition.Y == StartPosMax.Y)
-		{
-			NextPosition.Y = StartPosMax.Y - 2;
-		}
+		//if (NextPosition.X == StartPosMax.X)
+		//{
+		//	NextPosition.X = StartPosMax.X - 2;
+		//}
+		//if (NextPosition.Y == StartPosMax.Y)
+		//{
+		//	NextPosition.Y = StartPosMax.Y - 2;
+		//}
 
 		if (LoopCount == 100)
 		{
