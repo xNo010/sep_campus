@@ -1,21 +1,4 @@
-﻿#include <windows.h>
-#include <iostream>
-
-#pragma comment(lib,"winmm.lib")
-
-#define MaxDataNum 23	// データの最大数
-
-struct TrainData	// データ
-{
-	int ID;
-	int LeftMoveTime;
-};
-
-TrainData Train[MaxDataNum];
-int MovingNum;			// 
-int WhereDir;			// 左:-1 右:+1
-int TotalMoveTime;		// 
-int ShortestMoveTime;	// 
+﻿#include "yamanote.h"
 
 int main()
 {
@@ -23,7 +6,7 @@ int main()
 
 	// ----- 初期化 -----
 	// 電車
-	for (int i = 0; i < MaxDataNum; i++)
+	for (short i = 0; i < MaxDataNum; i++)
 	{
 		// 1～23
 		Train[i].ID = i + 1;
@@ -42,20 +25,18 @@ int main()
 		}
 	}
 
+	// 乗車開始ID
+	StartId = EndId = 0;
+
 	// 移動数(1～23)
-	MovingNum = rand() % MaxDataNum + 1;
+	MovingNum = 5;//rand() % MaxDataNum + 1;
 	// 10以上はいったん10に固定
 	if (MovingNum >= 10)
 		MovingNum = 10;
 
-	// 周期数(23以降から1, 46から2...)
+	MovingNum = 0;
 
-	// 移動方向(左:-1 右:+1)
-	// 最終的にどちらの方向が最短かを見るのでここいらん
-	//WhereDir = rand() % 2;
-	//if (WhereDir == 0)
-	//	WhereDir = -1;
-	WhereDir = 0;
+	// 周期数(23以降から1, 46から2...)
 
 	// 総移動時間
 	TotalMoveTime = 0;
@@ -64,71 +45,27 @@ int main()
 
 	// ----- 実行 -----
 	// IDの指定
+	StartId = 4;
+	EndId = 10;
 
-	// 移動数表示
-	std::cout << "移動数:" << MovingNum << "\n\n";
+	// 乗車IDと降車IDの表示
+	std::cout << "乗車ID:" << StartId << "\n" << "降車ID:" << EndId << "\n";
 
-	// 反時計回り(反時計回り)の場合
-	if (WhereDir == -1)
-	{
-		std::cout << "移動方向:反時計回り \n";
-
-		// IDを毎回保存
-		int SaveNumber = -1;
-
-		// i = 0はない(最終的にidを指定させたい)
-		for (int i = 3; i > 3 - MovingNum; i--)
-		{
-			SaveNumber = i;
-			if (SaveNumber < 0)
-			{
-				// -23まではRollCountは0?
-				//RollCount = i / MaxDataNum;
-				SaveNumber += MaxDataNum /*RollCountが1以上なら+ (1, 2, 3) を足せるようにしたい*/;
-			}
-			TotalMoveTime += Train[SaveNumber].LeftMoveTime;
-		}
-
-		std::cout << "Train[3].ID:4から、Train[" << SaveNumber << "].ID:" << SaveNumber + 1 << "までの到着時間は" << TotalMoveTime << "分です。\n\n";
-	}
-	// 時計回り(時計回り)の場合
-	else if (WhereDir == 1)
-	{
-		std::cout << "移動方向:時計回り \n";
-
-		// IDを毎回保存
-		int SaveNumber = -1;
-
-		// i = 0はない(最終的にidを指定させたい)
-		for (int i = 3; i < (3 + MovingNum); i++)
-		{
-			SaveNumber = i;
-			if (SaveNumber >= MaxDataNum)
-			{
-				// +23まではRollCountは0?
-				//RollCount = i / MaxDataNum;
-				SaveNumber -= MaxDataNum;
-			}
-			TotalMoveTime += Train[SaveNumber].LeftMoveTime;
-		}
-
-		std::cout << "Train[3].ID:4から、Train[" << SaveNumber << "].ID:" << SaveNumber + 1 << "までの到着時間は" << TotalMoveTime << "分です。\n\n";
-	}
-	// 例外
-	else
-	{
-		std::cout << "方向が決まっていません\n\n";
-	}
+	//std::cout << "Train[3].ID:4から、Train[" << SaveNumber << "].ID:" << SaveNumber + 1 << "までの到着時間は" << TotalMoveTime << "分です。\n\n";
 
 	// 計算処理
 	// ID/配列番号を毎回保存
-	int SaveNumber = -1;
+	short SaveNumber = -1;
 
 	// 反時計回り
-	// i = 0はない(最終的にidを指定させたい)
-	for (int i = 3; i > 3 - MovingNum; i--)
+
+	// 反時計のStartIdからEndIdは
+	// 最大駅数からStartIdを引くと出てくる数分回す?
+	MovingNum = StartId - MaxDataNum;
+	for (short i = StartId; i > MovingNum; i--)
 	{
-		SaveNumber = i;
+		// 配列番号の保存
+		SaveNumber = i - 1;
 		if (SaveNumber < 0)
 		{
 			SaveNumber += MaxDataNum;
@@ -141,12 +78,15 @@ int main()
 
 	// 一旦最短移動時間として格納
 	ShortestMoveTime = TotalMoveTime;
+	// 合計時間を初期化
+	TotalMoveTime = 0;
 
 	// 時計回り
-	// i = 0はない(最終的にidを指定させたい)
-	for (int i = 3; i < (3 + MovingNum); i++)
+	MovingNum = EndId;
+	for (short i = StartId; i < MovingNum; i++)
 	{
-		SaveNumber = i;
+		// 配列番号の保存
+		SaveNumber = i - 1;
 		if (SaveNumber >= MaxDataNum)
 		{
 			SaveNumber -= MaxDataNum;
@@ -164,12 +104,12 @@ int main()
 	}
 	
 	// 最短移動時間の表示
-	printf("最短移動時間は%d分です。\n", ShortestMoveTime);
+	printf("乗車ID:%dから降車ID:%dまでの最短移動時間は%d分です。\n", StartId, EndId, ShortestMoveTime);
 
 	// 移動時間の表示
-	std::cout << "1駅移動時間(時計回り基準)\n";
-	for (int i = 0; i < MaxDataNum; i++)
+	std::cout << "次の駅への移動時間(時計回り基準)\n";
+	for (short i = 0; i < MaxDataNum; i++)
 	{
-		std::cout << "Train[" << i << "].ID:" << i + 1 << "..." << Train[i].LeftMoveTime << '\n';
+		std::cout << "Train[" << i << "].ID:" << i + 1 << " " << Train[i].LeftMoveTime << "分\n";
 	}
 }
