@@ -24,7 +24,7 @@ int main()
 			Update(&NewPosition, RotateDir, EndFlag);
 
 			// 通常の待機時間
-			Sleep(100);
+			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
@@ -40,7 +40,7 @@ int main()
 			Update(&NewPosition, RotateDir, EndFlag);
 
 			// 通常の待機時間
-			Sleep(100);
+			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
@@ -56,7 +56,7 @@ int main()
 			Update(&NewPosition, RotateDir, EndFlag);
 
 			// 通常の待機時間
-			Sleep(100);
+			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
@@ -70,7 +70,7 @@ int main()
 			Update(&NewPosition, RotateDir, EndFlag);
 
 			// 通常の待機時間
-			Sleep(100);
+			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
@@ -83,7 +83,7 @@ int main()
 		}
 
 		// ブロックの落下
-		if (!PushReturnFlag && GetKeyState(VK_RETURN) & 0x80)
+		//if (!PushReturnFlag && GetKeyState(VK_RETURN) & 0x80)
 		{
 			NewPosition.Y += MovingValue;
 			PushReturnFlag = TRUE;
@@ -94,14 +94,14 @@ int main()
 			if (PushDownFlag)
 			{
 				// ループを早くする
-				//Sleep(500);
+				Sleep(200);
 				PushDownFlag = FALSE;
 			}
 			else
 			{
 				// 通常の待機時間
-				Sleep(100);
-				//Sleep(1000);
+				//Sleep(100);
+				Sleep(1000);
 			}
 		}
 	}
@@ -120,8 +120,8 @@ bool Initialize()
 	}
 
 	ZeroMemory(Map, sizeof(Map));
-	ZeroMemory(DrawMap, sizeof(DrawMap));
 	ZeroMemory(Zangai, sizeof(Zangai));
+	ZeroMemory(SaveZangai, sizeof(SaveZangai));
 	ZeroMemory(MoveBlock, sizeof(MoveBlock));
 
 	// Mapの初期化
@@ -180,7 +180,7 @@ void EntryBlock(short BlockData[][BLOCK_NUM])
 	short EntryNum = rand() % EBlockCategory::MaxNum;
 
 	// デバッグ用
-	//EntryNum = EBlockCategory::InvL;
+	EntryNum = EBlockCategory::Square;
 
 	// ブロック生成
 	// [2][2]が中心
@@ -1039,12 +1039,13 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 		}
 	}
 
-	// Zangaiの再配置
-	// 下からしゅっしゅっ
-	for (short i = MAP_HEIGHT - 1; i >= 0; i--)
+	short LastNumber = -1;
+	short DisappNum = 0;
+	// Zangaiのi番目が一列そろっているかの確認
+	for (short i = 0; i < MAP_HEIGHT; i++)
 	{
 		// 一列そろっているかの判定用カウント
-		short AlignCount = 0;
+		short AlignCount = -1;
 		for (short j = 0; j < MAP_WIDTH; j++)
 		{
 			// ブロックが置かれていなければ配置処理を飛ばす
@@ -1052,18 +1053,56 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 				continue;
 
 			// ブロックの場合カウントを増やす
-			//AlignCount++;
-			//
-			//// 一列がブロックでそろっていた場合
-			//if (AlignCount == MAP_WIDTH - 1)
-			//{
-			//	// Zangaiの一列を削除する処理
-			//	while (AlignCount >= 0)
-			//	{
-			//		Zangai[i][AlignCount] = EChip::None;
-			//		AlignCount--;
-			//	}
-			//}
+			AlignCount++;
+			
+			// 一列がブロックでそろっていた場合
+			if (AlignCount == MAP_WIDTH - 1)
+			{
+				// Zangaiの一列を削除する処理
+				while (AlignCount > -1)
+				{
+					Zangai[i][AlignCount] = EChip::None;
+					AlignCount--;
+				}
+				LastNumber = i;
+				DisappNum++;
+			}
+		}
+	}
+
+	// numが変わっている場合消えた分配列をずらす
+	if (LastNumber != -1)
+	{
+		for (short i = LastNumber; i >= 0; i--)
+		{
+			for (short j = 0; j < MAP_WIDTH; j++)
+			{
+				if (i - 1 < 0)
+					break;
+
+				SaveZangai[i][j] = Zangai[i - DisappNum][j];
+			}
+		}
+		// 改めてZangaiに配置
+		for (short i = 0; i < LastNumber + 1; i++)
+		{
+			for (short j = 0; j < MAP_WIDTH; j++)
+			{
+				Zangai[i][j] = SaveZangai[i][j];
+			}
+		}
+	}
+
+	// Zangaiの再配置
+	// 下からしゅっしゅっ
+	for (short i = MAP_HEIGHT - 1; i >= 0; i--)
+	{
+		for (short j = 0; j < MAP_WIDTH; j++)
+		{
+			// ブロックが置かれていなければ配置処理を飛ばす
+			if (Zangai[i][j] != EChip::Exist)
+				continue;
+
 			Map[i][j] = Zangai[i][j];
 		}
 	}

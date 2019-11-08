@@ -49,8 +49,8 @@ void Update(COORD* Position, short Rotate, bool End);
 void Draw();
 
 short Map[MAP_HEIGHT][MAP_WIDTH];
-short DrawMap[MAP_HEIGHT][MAP_WIDTH];
 short Zangai[MAP_HEIGHT][MAP_WIDTH];
+short SaveZangai[MAP_HEIGHT][MAP_WIDTH];
 
 COORD FirstPosition;
 COORD NewPosition;
