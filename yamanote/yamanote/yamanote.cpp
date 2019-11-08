@@ -29,11 +29,6 @@ int main()
 	StartId = EndId = 0;
 
 	// 移動数(1～23)
-	MovingNum = 5;//rand() % MaxDataNum + 1;
-	// 10以上はいったん10に固定
-	if (MovingNum >= 10)
-		MovingNum = 10;
-
 	MovingNum = 0;
 
 	// 周期数(23以降から1, 46から2...)
@@ -51,8 +46,6 @@ int main()
 	// 乗車IDと降車IDの表示
 	std::cout << "乗車ID:" << StartId << "\n" << "降車ID:" << EndId << "\n";
 
-	//std::cout << "Train[3].ID:4から、Train[" << SaveNumber << "].ID:" << SaveNumber + 1 << "までの到着時間は" << TotalMoveTime << "分です。\n\n";
-
 	// 計算処理
 	// ID/配列番号を毎回保存
 	short SaveNumber = -1;
@@ -61,8 +54,8 @@ int main()
 
 	// 反時計のStartIdからEndIdは
 	// 最大駅数からStartIdを引くと出てくる数分回す?
-	MovingNum = StartId - MaxDataNum;
-	for (short i = StartId; i > MovingNum; i--)
+	MovingNum = 13;
+	for (short i = StartId; i < MovingNum; i--)
 	{
 		// 配列番号の保存
 		SaveNumber = i - 1;
