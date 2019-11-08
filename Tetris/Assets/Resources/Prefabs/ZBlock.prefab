@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6608622026566389398}
   - component: {fileID: 7806751886390242196}
   m_Layer: 0
-  m_Name: ZiguBlock
+  m_Name: ZigZagBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
