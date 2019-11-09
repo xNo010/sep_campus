@@ -2,30 +2,33 @@
 
 public class InputScript : MonoBehaviour
 {
-    private const short movingValue = 1;
-
     void Start()
     {
 
     }
 
-    public void InputUpdate(Block block, Vector2 position)
+    public void InputUpdate(Vector2 position, short speed)
     {
+        // 子に受け取った座標を入れ込む
+        //transform.GetChild(0).transform.position = transform.position = position;
+
         // 入力情報
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            position.x -= movingValue;
+            position.x -= speed;
+            Debug.Log("左押されたy");
         }
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            position.x += movingValue;
+            position.x += speed;
+            Debug.Log("右押されたy");
         }
-        if (!block.IsStop() && Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            position.y -= movingValue;
+            position.y -= speed;
         }
 
-        block.SetPosition(position);
+        //transform.position = position;
     }
 
     public Transform GetTransform()
