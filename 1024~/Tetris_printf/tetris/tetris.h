@@ -66,7 +66,6 @@ bool PushRotateFlag;
 bool PushLeftRightFlag;
 bool PushDownFlag;
 bool PushReturnFlag;
-bool FirstDrawFlag;
 bool EndFlag;
 
 BYTE Key[MAX_PATH];
