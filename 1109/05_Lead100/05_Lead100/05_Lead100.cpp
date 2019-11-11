@@ -65,7 +65,7 @@ void Lead100(int32_t List[MAX_LIST])
 				RandNum = rand() % 3;
 			}
 
-			// 以前のリストを見て、掛けられていた場合必ず足す処理
+			// 以前のリストを見て、掛けられていた場合必ず足す処理に
 			if (i != 0 && List[i - 1] / 10 == OriginValue[i - 1])
 			{
 				RandNum = 0;
@@ -77,27 +77,32 @@ void Lead100(int32_t List[MAX_LIST])
 				temp += List[i];
 				if (SaveRandNum != 2)
 				{
+					// bufferに格納
 					sprintf_s(buffer, "+%d", List[i]);
 				}
 				else
 				{
-					// 前のやつとくっつける為
+					// bufferに格納
 					sprintf_s(buffer, "%d", List[i]);
 				}
 				// 合成
 				strcat_s(SaveChar, buffer);
 
-				// 最初の時だけ+が付いたとき消したい
-				//if (i == 0)
-				//{
-				//	// string型に送り0を消す処理
-				//	Dispstr[LeadCount] = SaveChar;
-				//	Dispstr[LeadCount].erase(Dispstr[LeadCount].find('+'), 1);
-				//	strcpy_s(SaveChar, Dispstr[LeadCount].c_str());
-				//}
+				// 最初の時だけ+が付いたとき消す
+				if (i == 0)
+				{
+					// string型に送り0を消す処理
+					Dispstr[LeadCount] = SaveChar;
+					if (Dispstr[LeadCount].find('+') != string::npos)
+					{
+						Dispstr[LeadCount].erase(Dispstr[LeadCount].find("+"), 1);
+						strcpy_s(SaveChar, Dispstr[LeadCount].c_str());
+					}
+				}
 				break;
 			case 1:					// 引く
 				temp -= List[i];
+				// bufferに格納
 				sprintf_s(buffer, "-%d", List[i]);
 				// 合成
 				strcat_s(SaveChar, buffer);
@@ -107,16 +112,29 @@ void Lead100(int32_t List[MAX_LIST])
 				temp += List[i];
 				if (SaveRandNum != 2)
 				{
+					// bufferに格納
 					sprintf_s(buffer, "+%d", List[i]);
 				}
 				else
 				{
-					// 前のやつとくっつける為
+					// bufferに格納
 					sprintf_s(buffer, "%d", List[i]);
 				}
 
 				// 合成
 				strcat_s(SaveChar, buffer);
+
+				// 最初の時だけ+が付いたとき消す
+				if (i == 0)
+				{
+					// string型に送り0を消す処理
+					Dispstr[LeadCount] = SaveChar;
+					if (Dispstr[LeadCount].find('+') != string::npos)
+					{
+						Dispstr[LeadCount].erase(Dispstr[LeadCount].find('+'), 1);
+						strcpy_s(SaveChar, Dispstr[LeadCount].c_str());
+					}
+				}
 
 				// string型に送り0を消す処理
 				Dispstr[LeadCount] = SaveChar;
@@ -133,7 +151,7 @@ void Lead100(int32_t List[MAX_LIST])
 		// 結果100を求められてたら
 		if (temp == 100)
 		{
-			sprintf_s(buffer, " = %d", temp);
+			sprintf_s(buffer, " = %3d", temp);
 			strcat_s(SaveChar, buffer);
 			Dispstr[LeadCount] = SaveChar;
 			LeadCount++;
