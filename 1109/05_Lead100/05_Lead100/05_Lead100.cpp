@@ -91,7 +91,7 @@ void Lead100(int32_t List[MAX_LIST])
 				// 最初の時だけ+が付いたとき消す
 				if (i == 0)
 				{
-					// string型に送り0を消す処理
+					// string型に送り+を消す処理
 					Dispstr[LeadCount] = SaveChar;
 					if (Dispstr[LeadCount].find('+') != string::npos)
 					{
@@ -127,7 +127,7 @@ void Lead100(int32_t List[MAX_LIST])
 				// 最初の時だけ+が付いたとき消す
 				if (i == 0)
 				{
-					// string型に送り0を消す処理
+					// string型に送り+を消す処理
 					Dispstr[LeadCount] = SaveChar;
 					if (Dispstr[LeadCount].find('+') != string::npos)
 					{
