@@ -16,7 +16,7 @@ int main()
 void Lead100(int32_t List[MAX_LIST])
 {
 	// 何個結果を表示したいか
-	const int32_t MaxDisp = 8;
+	const int32_t MaxDisp = 10;
 	// 100を導けた回数を保存
 	int32_t LeadCount = 0;
 
@@ -27,6 +27,8 @@ void Lead100(int32_t List[MAX_LIST])
 
 	while (LeadCount < MaxDisp)
 	{
+		Dispstr[LeadCount] = "";
+
 		// 乱数登録
 		int32_t RandNum = 0;
 
@@ -82,7 +84,10 @@ void Lead100(int32_t List[MAX_LIST])
 					// 前のやつとくっつける為
 					sprintf_s(buffer, "%d", List[i]);
 				}
+				// 合成
 				strcat_s(SaveChar, buffer);
+
+				// 最初の時だけ+が付いたとき消したい
 				//if (i == 0)
 				//{
 				//	// string型に送り0を消す処理
@@ -94,6 +99,7 @@ void Lead100(int32_t List[MAX_LIST])
 			case 1:					// 引く
 				temp -= List[i];
 				sprintf_s(buffer, "-%d", List[i]);
+				// 合成
 				strcat_s(SaveChar, buffer);
 				break;
 			case 2:					// かける
@@ -108,6 +114,8 @@ void Lead100(int32_t List[MAX_LIST])
 					// 前のやつとくっつける為
 					sprintf_s(buffer, "%d", List[i]);
 				}
+
+				// 合成
 				strcat_s(SaveChar, buffer);
 
 				// string型に送り0を消す処理
