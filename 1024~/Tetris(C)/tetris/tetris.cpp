@@ -11,33 +11,36 @@ int main()
 	while (!EndFlag)
 	{
 		// --- 入力情報 ---
-		// 左・右回り回転:←→キー
-		if (!PushRotateFlag && GetKeyState(VK_LEFT) & 0x80)
+		// 左・右回り回転:ADキー
+		if (GetKeyState('A') & 0x80)
 		{
 			printf("左回りに回転\n");
 			RotateDir--;
-			RotateDir %= 4;
+			if (RotateDir < ERotationType::Standard)
+			{
+				RotateDir = ERotationType::Left;
+			}
 			printf("回転値:%d\n", RotateDir);
-			PushRotateFlag = TRUE;
+			LeftRotateFlag = TRUE;
 
 			// 更新
-			Update(&NewPosition, RotateDir, EndFlag);
+			Update(&NewPosition, RotateDir, &EndFlag);
 
 			// 通常の待機時間
 			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
-		else if (!PushRotateFlag && GetKeyState(VK_RIGHT) & 0x80)
+		if (GetKeyState('D') & 0x80)
 		{
 			printf("右回りに回転\n");
 			RotateDir++;
 			RotateDir %= 4;
 			printf("回転値:%d\n", RotateDir);
-			PushRotateFlag = TRUE;
+			LeftRotateFlag = FALSE;
 
 			// 更新
-			Update(&NewPosition, RotateDir, EndFlag);
+			Update(&NewPosition, RotateDir, &EndFlag);
 
 			// 通常の待機時間
 			Sleep(300);
@@ -45,29 +48,29 @@ int main()
 			continue;
 		}
 
-		// 左右移動:ADキー
-		if (!PushLeftRightFlag && GetKeyState('A') & 0x80)
+		// 左右移動:←→キー
+		if (!LeftMoveFlag && GetKeyState(VK_LEFT) & 0x80)
 		{
 			printf("左に1マス移動\n");
 			NewPosition.X -= MovingValue;
-			PushLeftRightFlag = TRUE;
+			LeftMoveFlag = TRUE;
 
 			// 更新
-			Update(&NewPosition, RotateDir, EndFlag);
+			Update(&NewPosition, RotateDir, &EndFlag);
 
 			// 通常の待機時間
 			Sleep(300);
 			//Sleep(1000);
 			continue;
 		}
-		else if (!PushLeftRightFlag && GetKeyState('D') & 0x80)
+		else if (!RightMoveFlag && GetKeyState(VK_RIGHT) & 0x80)
 		{
 			printf("右に1マス移動\n");
 			NewPosition.X += MovingValue;
-			PushLeftRightFlag = TRUE;
+			RightMoveFlag = TRUE;
 
 			// 更新
-			Update(&NewPosition, RotateDir, EndFlag);
+			Update(&NewPosition, RotateDir, &EndFlag);
 
 			// 通常の待機時間
 			Sleep(300);
@@ -76,7 +79,7 @@ int main()
 		}
 
 		// 高速落下
-		if (!PushDownFlag && GetKeyState('S') & 0x80)
+		if (!PushDownFlag && GetKeyState(VK_SPACE) & 0x80)
 		{
 			printf("自分で落下\n");
 			PushDownFlag = TRUE;
@@ -89,7 +92,7 @@ int main()
 			PushReturnFlag = TRUE;
 
 			// 更新
-			Update(&NewPosition, RotateDir, EndFlag);
+			Update(&NewPosition, RotateDir, &EndFlag);
 
 			if (PushDownFlag)
 			{
@@ -122,6 +125,7 @@ bool Initialize()
 	ZeroMemory(Map, sizeof(Map));
 	ZeroMemory(Zangai, sizeof(Zangai));
 	ZeroMemory(SaveZangai, sizeof(SaveZangai));
+	ZeroMemory(SaveBlock, sizeof(SaveBlock));
 	ZeroMemory(MoveBlock, sizeof(MoveBlock));
 
 	// Mapの初期化
@@ -152,12 +156,13 @@ bool Initialize()
 	// ブロック初期座標
 	FirstPosition.X = FirstPosition.Y = 0;
 	NewPosition.X = NewPosition.Y = 0;
-	RotateDir = 0;
-	SaveRotate = 4;
+	RotateDir = ERotationType::Standard;
+	SaveRotateInfo = 4;
 	EntryBlockNum = 0;
 
-	PushRotateFlag = FALSE;
-	PushLeftRightFlag = FALSE;
+	LeftRotateFlag = FALSE;
+	LeftMoveFlag = FALSE;
+	RightMoveFlag = FALSE;
 	PushDownFlag = FALSE;
 	PushReturnFlag = FALSE;
 	EndFlag = FALSE;
@@ -171,68 +176,68 @@ bool Initialize()
 	return TRUE;
 }
 
-void EntryBlock(short BlockData[][BLOCK_NUM])
+void EntryBlock(short Data[BLOCK_NUM][BLOCK_NUM])
 {
 	// 最初に空にする初期化
-	ZeroMemory(BlockData, sizeof(MoveBlock));
+	ZeroMemory(Data, sizeof(MoveBlock));
 
 	// ブロックの最大数の範囲で乱数生成
 	short EntryNum = rand() % EBlockCategory::MaxNum;
 
 	// デバッグ用
-	EntryNum = EBlockCategory::Square;
+	EntryNum = EBlockCategory::Stick;
 
 	// ブロック生成
-	// [2][2]が中心
+	// [2][2]が中心とする
 	switch (EntryNum)
 	{
 	case EBlockCategory::Square:	// 四角
-		BlockData[1][1] = EChip::Exist;
-		BlockData[1][2] = EChip::Exist;
-		BlockData[2][1] = EChip::Exist;
-		BlockData[2][2] = EChip::Exist;
+		Data[1][1] = EChip::Exist;
+		Data[1][2] = EChip::Exist;
+		Data[2][1] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
 		printf("形:四角\n");
 		break;
 	case EBlockCategory::Stick:		// 棒(縦または横)
 		for (short i = 1; i <= 4; i++)
 		{
-			BlockData[i][2] = EChip::Exist;
+			Data[i][2] = EChip::Exist;
 		}
 		printf("形:棒\n");
 		break;
 	case EBlockCategory::Convex:	// 凸
-		BlockData[1][2] = EChip::Exist;
-		BlockData[2][1] = EChip::Exist;
-		BlockData[2][2] = EChip::Exist;
-		BlockData[2][3] = EChip::Exist;
+		Data[1][2] = EChip::Exist;
+		Data[2][1] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
+		Data[2][3] = EChip::Exist;
 		printf("形:凸\n");
 		break;
 	case EBlockCategory::Z:			// Z
-		BlockData[2][1] = EChip::Exist;
-		BlockData[2][2] = EChip::Exist;
-		BlockData[3][2] = EChip::Exist;
-		BlockData[3][3] = EChip::Exist;
+		Data[2][1] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
+		Data[3][2] = EChip::Exist;
+		Data[3][3] = EChip::Exist;
 		printf("形:Z\n");
 		break;
 	case EBlockCategory::InvZ:		// 逆Z
-		BlockData[2][2] = EChip::Exist;
-		BlockData[2][3] = EChip::Exist;
-		BlockData[3][1] = EChip::Exist;
-		BlockData[3][2] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
+		Data[2][3] = EChip::Exist;
+		Data[3][1] = EChip::Exist;
+		Data[3][2] = EChip::Exist;
 		printf("形:逆Z\n");
 		break;
 	case EBlockCategory::L:			// L
-		BlockData[1][1] = EChip::Exist;
-		BlockData[2][1] = EChip::Exist;
-		BlockData[2][2] = EChip::Exist;
-		BlockData[2][3] = EChip::Exist;
+		Data[1][1] = EChip::Exist;
+		Data[2][1] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
+		Data[2][3] = EChip::Exist;
 		printf("形:L\n");
 		break;
 	case EBlockCategory::InvL:		// 逆L
-		BlockData[1][3] = EChip::Exist;
-		BlockData[2][1] = EChip::Exist;
-		BlockData[2][2] = EChip::Exist;
-		BlockData[2][3] = EChip::Exist;
+		Data[1][3] = EChip::Exist;
+		Data[2][1] = EChip::Exist;
+		Data[2][2] = EChip::Exist;
+		Data[2][3] = EChip::Exist;
 		printf("形:逆L\n");
 		break;
 	default:
@@ -246,24 +251,26 @@ void EntryBlock(short BlockData[][BLOCK_NUM])
 
 	// ブロックのマップ初期座標
 	RotateDir = 0;
+	SaveRotateInfo = RotateDir;
 	// ブロックは全て5×5の配列からなる
 	FirstPosition = { 2, 4 };
+	// 次回から使うポジションを最初のポジションにしておく
 	NewPosition = FirstPosition;
 	// マップに配置
 	for (short i = 0; i < BLOCK_NUM; i++)
 	{
 		for (short j = 0; j < BLOCK_NUM; j++)
 		{
-			if (BlockData[i][j] == EChip::None)
+			if (Data[i][j] == EChip::None)
 				continue;
 
-			Map[FirstPosition.Y + i][FirstPosition.X + j] = BlockData[i][j];
+			Map[FirstPosition.Y + i][FirstPosition.X + j] = Data[i][j];
 		}
 	}
 }
 
 // 更新
-void Update(COORD* BlockPosition, short Rotate, bool End)
+void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 {
 	// --- マップの更新 ---
 	// Mapをまっさらな状態に
@@ -282,661 +289,182 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 		}
 	}
 
-	// MoveBlockの座標更新
-	// 先に回転処理
-	// 0の時・-1(3)の時・1(-3)の時・2(-2)の時が存在
-	// ブロックの種類によって端まで行く際の座標が決まる
+	// --- MoveBlockの座標更新 ---
+	// 回転したかどうかチェック
+	RotationCheck(BlockPosition, RotateInfo);
+
+	// 座標補正
 	switch (EntryBlockNum)
 	{
-	case EBlockCategory::Square:	// 四角
-		// 移動制限
-		if (Rotate == -1 || Rotate == 0 || Rotate == 3)
+	case EBlockCategory::Square:
+		if (RotateInfo == 0 || RotateInfo == 3)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (Rotate == -3 || Rotate == 1 || abs(Rotate) == 2)
+		else if (RotateInfo == 1 || RotateInfo == 2)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[1][1] = EChip::Exist;
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-		}
-		else if (RotateDir == -3 || RotateDir == 1)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[1][3] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][1] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (abs(RotateDir) == 2)
-		{
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-			MoveBlock[3][3] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-		}
-
 		break;
-	case EBlockCategory::Stick:		// 棒(縦または横)
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
+	case EBlockCategory::Stick:
+		if (RotateInfo == 0 || RotateInfo == 2)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (Rotate == -3 || Rotate == 1)
+		else if (RotateInfo == 1)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::Min)
 			{
 				BlockPosition->X = EOffsetCoord::Min;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (Rotate == -1 || Rotate == 3)
+		else if (RotateInfo == 3)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::Max)
 			{
 				BlockPosition->X = EOffsetCoord::Max;
 			}
 		}
-
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-			MoveBlock[4][2] = EChip::Exist;
-
-			MoveBlock[2][0] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[2][4] = EChip::None;
-		}
-		else if (RotateDir == -3 || RotateDir == 1)
-		{
-			MoveBlock[2][0] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[0][2] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[4][2] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[2][4] = EChip::Exist;
-
-			MoveBlock[0][2] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[4][2] = EChip::None;
-		}
-		else if (abs(RotateDir) == 2)
-		{
-			MoveBlock[0][2] = EChip::Exist;
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[2][0] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[2][4] = EChip::None;
-		}
 		break;
-	case EBlockCategory::Convex:	// 凸
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
+	case EBlockCategory::Convex:
+		if (RotateInfo == 0 || RotateInfo == 2)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (Rotate == -3 || Rotate == 1)
+		else if (RotateInfo == 1)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (Rotate == -1 || Rotate == 3)
+		else if (RotateInfo == 3)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[3][2] = EChip::None;
-		}
-		else if (RotateDir == -3 || RotateDir == 1)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[2][1] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[2][3] = EChip::None;
-		}
-		else if (abs(RotateDir) == 2)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-		}
-
 		break;
-	case EBlockCategory::Z:			// Z
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
+	case EBlockCategory::Z:
+	case EBlockCategory::InvZ:
+		if (RotateInfo == 0 || RotateInfo == 2)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (Rotate == -3 || Rotate == 1)
+		else if (RotateInfo == 1)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (Rotate == -1 || Rotate == 3)
+		else if (RotateInfo == 3)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
-		}
-
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-			MoveBlock[3][3] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][1] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[1][3] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (abs(Rotate) == 2)
-		{
-			MoveBlock[1][1] = EChip::Exist;
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
 		}
 		break;
-	case EBlockCategory::InvZ:		// 逆Z
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
+	case EBlockCategory::L:
+	case EBlockCategory::InvL:
+		if (RotateInfo == 0 || RotateInfo == 2)
 		{
-			// 左限界値
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (Rotate == -3 || Rotate == 1)
+		else if (RotateInfo == 1)
 		{
-			// 左限界値
+			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
+			{
+				BlockPosition->X = EOffsetCoord::MoreMoreMin;
+			}
+			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
+			{
+				BlockPosition->X = EOffsetCoord::MoreMax;
+			}
+		}
+		else if (RotateInfo == 3)
+		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMin;
 			}
-			// 右限界値
 			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
 			{
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMax;
-			}
-		}
-
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][1] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			MoveBlock[1][1] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][3] = EChip::Exist;
-
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-		}
-		else if (abs(Rotate) == 2)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[1][3] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		break;
-	case EBlockCategory::L:			// L
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMax;
-			}
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMax;
-			}
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMoreMax;
-			}
-		}
-
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[1][1] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[1][3] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][1] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (abs(Rotate) == 2)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][3] = EChip::Exist;
-
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-		}
-		break;
-	case EBlockCategory::InvL:		// 逆L
-		// 移動制限
-		if (Rotate == 0 || abs(Rotate) == 2)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMax;
-			}
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMax;
-			}
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			// 左限界値
-			if (BlockPosition->X <= EOffsetCoord::MoreMin)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMin;
-			}
-			// 右限界値
-			else if (BlockPosition->X >= EOffsetCoord::MoreMoreMax)
-			{
-				BlockPosition->X = EOffsetCoord::MoreMoreMax;
-			}
-		}
-
-		// 回転値同じなら回転処理は不要
-		if (SaveRotate == Rotate)
-			break;
-		// 回転による形状変化
-		if (Rotate == 0)
-		{
-			MoveBlock[1][3] = EChip::Exist;
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
-		}
-		else if (Rotate == -3 || Rotate == 1)
-		{
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-			MoveBlock[3][3] = EChip::Exist;
-
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-		}
-		else if (Rotate == -1 || Rotate == 3)
-		{
-			MoveBlock[1][1] = EChip::Exist;
-			MoveBlock[1][2] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[3][2] = EChip::Exist;
-
-			MoveBlock[1][3] = EChip::None;
-			MoveBlock[2][1] = EChip::None;
-			MoveBlock[2][3] = EChip::None;
-			MoveBlock[3][1] = EChip::None;
-		}
-		else if (abs(Rotate) == 2)
-		{
-			MoveBlock[2][1] = EChip::Exist;
-			MoveBlock[2][2] = EChip::Exist;
-			MoveBlock[2][3] = EChip::Exist;
-			MoveBlock[3][1] = EChip::Exist;
-
-			MoveBlock[1][1] = EChip::None;
-			MoveBlock[1][2] = EChip::None;
-			MoveBlock[3][2] = EChip::None;
-			MoveBlock[3][3] = EChip::None;
 		}
 		break;
 	default:
 		break;
 	}
-	// 次からのスキップ用に回転情報を保存
-	SaveRotate = Rotate;
 
 	// 配置前にZangaiに触れているか/マップの下部にいるか確認
 	// いるならMoveBlockの情報をZangaiに書き込み削除/初期位置に再生成
@@ -946,7 +474,7 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 	// MoveBlockをMapに入れる前に行う
 	for (short i = BLOCK_NUM - 1; i >= 0; i--)
 	{
-		if (BlockPosition->Y + i < 0 || BlockPosition->Y + i >= MAP_HEIGHT)
+		if (BlockPosition->Y + i < 0 || BlockPosition->Y + i > MAP_HEIGHT)
 			continue;
 
 		for (short j = 0; j < BLOCK_NUM; j++)
@@ -980,7 +508,7 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 				BlockPosition->Y--;
 			}
 			// 左:jが最小ではないかつMoveBlock内で一番左のブロック/MoveBlock一番左列がブロックの場合を見る
-			else if (PushLeftRightFlag && ((j > 0 && MoveBlock[i][j - 1] == EChip::None) || (MoveBlock[i][0] == EChip::Exist)) &&
+			else if (LeftMoveFlag && ((j > 0 && MoveBlock[i][j - 1] == EChip::None) || (MoveBlock[i][0] == EChip::Exist)) &&
 				Zangai[BlockPosition->Y + i][BlockPosition->X + j] == EChip::Exist)
 			{
 				// 今いる座標にZangaiがあるか
@@ -993,20 +521,15 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 				}
 			}
 			// 右:jが最大ではないかつMoveBlock内で一番右のブロック/MoveBlock一番右列がブロックの場合を見る
-			//else if (PushLeftRightFlag && ((j < (BLOCK_NUM - 1) && MoveBlock[i][j + 1] == EChip::None) || (MoveBlock[i][BLOCK_NUM - 1] == EChip::Exist)) &&
-			//	Zangai[BlockPosition->Y + i][BlockPosition->X + j] == EChip::Exist)
-			//{
-			//	{
-			//		// めり込んでいる分戻す
-			//		BlockPosition->X--;
-			//		// MoveBlockはまだ止まらない
-			//		MoveStopFlag = FALSE;
-			//	}
-			//}
-			else
+			else if (RightMoveFlag && ((j < (BLOCK_NUM - 1) && MoveBlock[i][j + 1] == EChip::None) || (MoveBlock[i][BLOCK_NUM - 1] == EChip::Exist)) &&
+				Zangai[BlockPosition->Y + i][BlockPosition->X + j] == EChip::Exist)
 			{
-				// 何もせずfor文を終了
-				break;
+				{
+					// めり込んでいる分戻す
+					BlockPosition->X--;
+					// MoveBlockはまだ止まらない
+					MoveStopFlag = FALSE;
+				}
 			}
 		}
 	}
@@ -1017,8 +540,8 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 		for (short j = 0; j < BLOCK_NUM; j++)
 		{
 			// マップの配列外に出てしまうなら処理を飛ばす
-			if (BlockPosition->Y + i < 0 || BlockPosition->Y + i >= MAP_HEIGHT ||
-				BlockPosition->X + j < 0 || BlockPosition->X + j >= MAP_WIDTH)
+			if (BlockPosition->Y + i < 0 || BlockPosition->Y + i > MAP_HEIGHT ||
+				BlockPosition->X + j < 0 || BlockPosition->X + j > MAP_WIDTH)
 				continue;
 
 			if (!MoveStopFlag)
@@ -1044,13 +567,17 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 	// Zangaiのi番目が一列そろっているかの確認
 	for (short i = 0; i < MAP_HEIGHT; i++)
 	{
+		// 最初見てみてブロックが置かれていなければそろわないので飛ばす
+		if (Zangai[i][0] != EChip::Exist)
+			continue;
+
 		// 一列そろっているかの判定用カウント
 		short AlignCount = -1;
 		for (short j = 0; j < MAP_WIDTH; j++)
 		{
-			// ブロックが置かれていなければ配置処理を飛ばす
+			// ブロックが置かれていなければそろってないので終了
 			if (Zangai[i][j] != EChip::Exist)
-				continue;
+				break;
 
 			// ブロックの場合カウントを増やす
 			AlignCount++;
@@ -1093,34 +620,89 @@ void Update(COORD* BlockPosition, short Rotate, bool End)
 		}
 	}
 
-	// Zangaiの再配置
+	// Zangaiの再配置/ゲームオーバーの判定
 	// 下からしゅっしゅっ
 	for (short i = MAP_HEIGHT - 1; i >= 0; i--)
 	{
+		if (*End)
+			break;
+
 		for (short j = 0; j < MAP_WIDTH; j++)
 		{
 			// ブロックが置かれていなければ配置処理を飛ばす
 			if (Zangai[i][j] != EChip::Exist)
 				continue;
 
+			if (Map[i][j] == EChip::OutSide && Zangai[i][j] == EChip::Exist)
+			{ 
+				*End = true;
+				break;
+			}
 			Map[i][j] = Zangai[i][j];
 		}
 	}
 
-	// MoveBlockが動けなければ
-	if (MoveStopFlag)
+	// ゲームオーバーになっておらず、MoveBlockが動けなければ
+	if (!*End && MoveStopFlag)
 	{
 		// 新しく生成
 		EntryBlock(MoveBlock);
 	}
 
 	// 入力関係を初期化
-	PushRotateFlag = FALSE;
+	LeftRotateFlag = FALSE;
 	PushReturnFlag = FALSE;
-	PushLeftRightFlag = FALSE;
+	LeftMoveFlag = FALSE;
+	RightMoveFlag = FALSE;
 
 	// 最終的なMapを描画
 	Draw();
+}
+
+// 回転したかどうかチェック
+void RotationCheck(COORD* BlockPosition, int32_t RotateInfo)
+{
+	// ブロックの種類によって端まで行く際の座標が決まる
+
+	// 前回の回転値が同じなら処理を飛ばす
+	if (SaveRotateInfo == RotateInfo)
+		return;
+
+	// 左回転か右回転か
+	if (!LeftRotateFlag)
+	{
+		for (int32_t i = BLOCK_NUM; i > 0; i--)
+		{
+			for (int32_t j = 0; j < BLOCK_NUM; j++)
+			{
+				// 00 10 20 30 40 = 40 41 42 43 44
+				// 01 11 21 31 41 = 30 31 32 33 34
+				// 02 12 22 32 42 = 20 21 22 23 24
+				// 03 13 23 33 43 = 10 11 12 13 14
+				// 04 14 24 34 44 = 00 01 02 03 04
+				SaveBlock[j][BLOCK_NUM - i] = MoveBlock[i - 1][j];
+			}
+		}
+	}
+	else
+	{
+		for (int32_t i = 0; i < BLOCK_NUM; i++)
+		{
+			for (int32_t j = BLOCK_NUM; j > 0; j--)
+			{
+				// 00 10 20 30 40 = 04 03 02 01 00
+				// 01 11 21 31 41 = 14 13 12 11 10
+				// 02 12 22 32 42 = 24 23 22 21 20
+				// 03 13 23 33 43 = 34 33 32 31 30
+				// 04 14 24 34 44 = 44 43 42 41 40
+				SaveBlock[BLOCK_NUM - j][i] = MoveBlock[i][j - 1];
+			}
+		}
+	}
+	memcpy(MoveBlock, SaveBlock, sizeof(short) * BLOCK_NUM * BLOCK_NUM);
+
+	// 次からのスキップ用に回転情報を保存
+	SaveRotateInfo = RotateInfo;
 }
 
 // 描画

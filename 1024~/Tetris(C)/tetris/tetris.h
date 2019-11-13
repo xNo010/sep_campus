@@ -33,6 +33,14 @@ enum EBlockCategory
 	MaxNum
 };
 
+enum ERotationType
+{
+	Standard,
+	Right,
+	Inverse,
+	Left
+};
+
 enum EOffsetCoord
 {
 	MoreMoreMin = -2,
@@ -44,8 +52,9 @@ enum EOffsetCoord
 };
 
 bool Initialize();
-void EntryBlock(short Data[][BLOCK_NUM]);
-void Update(COORD* Position, short Rotate, bool End);
+void EntryBlock(short Data[BLOCK_NUM][BLOCK_NUM]);
+void Update(COORD* Position, short RotateInfo, bool* End);
+void RotationCheck(COORD* BlockPosition, int32_t RotateInfo);
 void Draw();
 
 short Map[MAP_HEIGHT][MAP_WIDTH];
@@ -55,15 +64,17 @@ short SaveZangai[MAP_HEIGHT][MAP_WIDTH];
 COORD FirstPosition;
 COORD NewPosition;
 short RotateDir;
-short SaveRotate;
+short SaveRotateInfo;
 const short MovingValue = 1;
+short SaveBlock[BLOCK_NUM][BLOCK_NUM];
 short MoveBlock[BLOCK_NUM][BLOCK_NUM];
 short EntryBlockNum;
 
 short EntryBlockTable[MAX_BLOCK_TABLE];
 
-bool PushRotateFlag;
-bool PushLeftRightFlag;
+bool LeftRotateFlag;
+bool LeftMoveFlag;
+bool RightMoveFlag;
 bool PushDownFlag;
 bool PushReturnFlag;
 bool EndFlag;
