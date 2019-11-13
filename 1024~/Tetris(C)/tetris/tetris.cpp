@@ -297,7 +297,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 	switch (EntryBlockNum)
 	{
 	case EBlockCategory::Square:
-		if (RotateInfo == 0 || RotateInfo == 3)
+		if (RotateInfo == ERotationType::Standard || RotateInfo == ERotationType::Left)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -308,7 +308,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (RotateInfo == 1 || RotateInfo == 2)
+		else if (RotateInfo == ERotationType::Right || RotateInfo == ERotationType::Inverse)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
@@ -321,7 +321,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 		}
 		break;
 	case EBlockCategory::Stick:
-		if (RotateInfo == 0 || RotateInfo == 2)
+		if (RotateInfo == ERotationType::Standard || RotateInfo == ERotationType::Inverse)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
@@ -332,7 +332,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (RotateInfo == 1)
+		else if (RotateInfo == ERotationType::Right)
 		{
 			if (BlockPosition->X <= EOffsetCoord::Min)
 			{
@@ -343,7 +343,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 3)
+		else if (RotateInfo == ERotationType::Left)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -356,7 +356,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 		}
 		break;
 	case EBlockCategory::Convex:
-		if (RotateInfo == 0 || RotateInfo == 2)
+		if (RotateInfo == ERotationType::Standard || RotateInfo == ERotationType::Inverse)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -367,7 +367,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 1)
+		else if (RotateInfo == ERotationType::Right)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
@@ -378,7 +378,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 3)
+		else if (RotateInfo == ERotationType::Left)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -392,7 +392,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 		break;
 	case EBlockCategory::Z:
 	case EBlockCategory::InvZ:
-		if (RotateInfo == 0 || RotateInfo == 2)
+		if (RotateInfo == ERotationType::Standard || RotateInfo == ERotationType::Inverse)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -403,7 +403,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 1)
+		else if (RotateInfo == ERotationType::Right)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -414,7 +414,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMoreMax;
 			}
 		}
-		else if (RotateInfo == 3)
+		else if (RotateInfo == ERotationType::Left)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
@@ -428,7 +428,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 		break;
 	case EBlockCategory::L:
 	case EBlockCategory::InvL:
-		if (RotateInfo == 0 || RotateInfo == 2)
+		if (RotateInfo == ERotationType::Standard || RotateInfo == ERotationType::Inverse)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
@@ -439,7 +439,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 1)
+		else if (RotateInfo == ERotationType::Right)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMoreMin)
 			{
@@ -450,7 +450,7 @@ void Update(COORD* BlockPosition, short RotateInfo, bool* End)
 				BlockPosition->X = EOffsetCoord::MoreMax;
 			}
 		}
-		else if (RotateInfo == 3)
+		else if (RotateInfo == ERotationType::Left)
 		{
 			if (BlockPosition->X <= EOffsetCoord::MoreMin)
 			{
