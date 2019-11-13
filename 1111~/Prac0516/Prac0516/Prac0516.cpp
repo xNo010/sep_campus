@@ -18,8 +18,12 @@ int main()
 	{
 		if (temp % i == 0)
 		{
-			IsPrime = true;
+			IsPrime = false;
 			break;
+		}
+		else
+		{
+			IsPrime = true;
 		}
 	}
 
