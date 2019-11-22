@@ -6,7 +6,7 @@ int main()
 
 	do
 	{
-		while (!FinishCheck(Map))
+		while (!FinishCheck(CheckMap, WhatHandCount))
 		{
 			InputFunc();
 	
@@ -19,10 +19,19 @@ void Initialize()
 {
 	Input.HoriSelect = '\0';
 	Input.VertSelect = 0;
+	HoriPos = 0;
+	VertPos = 0;
+	WhatHandCount = 0;
+	TotalSelected = 0;
 	NowTurn = true;
-	HoriCheck = 0;
-	VertCheck = 0;
-	SaveTotal = 0;
+
+	for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+	{
+		for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+		{
+			CheckMap[i][j] = EChipCate::Square;
+		}
+	}
 
 	for (int32_t i = 0; i < MAP_HEIGHT; i++)
 	{
@@ -32,22 +41,22 @@ void Initialize()
 			{
 				if (j % 2 != 0)
 				{
-					Map[i][j] = EChipCate::VertLine;
+					DrawMap[i][j] = EChipCate::VertLine;
 				}
 				else
 				{
-					Map[i][j] = EChipCate::HoriLine;
+					DrawMap[i][j] = EChipCate::HoriLine;
 				}
 			}
 			else
 			{
 				if (j % 2 != 0)
 				{
-					Map[i][j] = EChipCate::VertLine;
+					DrawMap[i][j] = EChipCate::VertLine;
 				}
 				else
 				{
-					Map[i][j] = EChipCate::Square;
+					DrawMap[i][j] = EChipCate::Square;
 				}
 			}
 		}
@@ -91,36 +100,21 @@ void Update()
 		CharChange = 0;
 		break;
 	case 'B':
-		CharChange = 2;
+		CharChange = 1;
 		break;
 	case 'C':
-		CharChange = 4;
+		CharChange = 2;
 		break;
 	default:
 		break;
 	}
 
-	// 縦番号によって、配列番号用に補正値を変更
-	int32_t offset = 0;
-	switch (Input.VertSelect)
-	{
-	case 1:
-		offset = -1;
-		break;
-	case 2:
-		offset = 0;
-		break;
-	case 3:
-		offset = 1;
-		break;
-	default:
-		break;
-	}
+	// 縦番号の補正値
+	int32_t offset = -1;
+	HoriPos = CharChange;
+	VertPos = Input.VertSelect + offset;
 
-	HoriCheck = CharChange;
-	VertCheck = Input.VertSelect + offset;
-
-	if (SelectedCheck(Map, HoriCheck, VertCheck))
+	if (SelectedCheck(CheckMap, HoriPos, VertPos))
 	{
 		printf("そこは選択済み\n");
 		return;
@@ -129,15 +123,31 @@ void Update()
 	// マップに配置(NowTurnで配置記号が変わる)
 	if (NowTurn)
 	{
-		Map[Input.VertSelect + offset][CharChange] = EChipCate::Circle;
+		CheckMap[VertPos][HoriPos] = EChipCate::Circle;
 	}
 	else
 	{
-		Map[Input.VertSelect + offset][CharChange] = EChipCate::Cross;
+		CheckMap[VertPos][HoriPos] = EChipCate::Cross;
 	}
+
+	// 何手目かを知る
+	WhatHandCount++;
 
 	// 交代
 	NowTurn = !NowTurn;
+
+	// 判定用マップを描画マップに送る
+	for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+	{
+		for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+		{
+			if (CheckMap[i][j] == EChipCate::Square)
+				continue;
+
+			DrawMap[i * 2][j * 2] = CheckMap[i][j];
+		}
+	}
+
 
 	Draw();
 }
@@ -187,7 +197,7 @@ void Draw()
 
 		for (int32_t j = 0; j < MAP_WIDTH; j++)
 		{
-			switch (Map[i][j])
+			switch (DrawMap[i][j])
 			{
 			case EChipCate::None:
 				printf(" ");
@@ -215,8 +225,9 @@ void Draw()
 	}
 }
 
-bool SelectedCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH], int32_t Hori, int32_t Vert)
+bool SelectedCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, int32_t Vert)
 {
+	// 四角でなければ選択されてる
 	if (Map[Vert][Hori] != EChipCate::Square)
 	{
 		return true;
@@ -225,43 +236,52 @@ bool SelectedCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH], int32_t Hori, int32_t Ver
 	return false;
 }
 
-bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
+bool FinishCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandCount)
 {
 	const int32_t MaxCount = 9;
 
-	// 最初に全部四角なのか見る(判定の必要があるかどうか)
-	int32_t SquareCount = 0;
-	for (int32_t i = 0; i < MAP_HEIGHT; i += 2)
-	{
-		for (int32_t j = 0; j < MAP_WIDTH; j += 2)
-		{
-			if (Map[i][j] == EChipCate::Square)
-			{
-				SquareCount++;
-			}
-		}
-	}
-	// 四角が5個以上あったら揃わない(false)
-	if (SquareCount >= MaxCount - 4)
+	// 5手目以降判定をする/それ以外はすぐfalseを返す
+	if (WhatHandCount < MaxCount - 4)
 	{
 		return false;
 	}
 
-	
 	const int32_t FinishCount = 3;
-	int32_t TotalSelected = 0;
 	
+	if (MatrixCheck(Map, FinishCount))
+	{
+		return true;
+	}
+	
+	if (ObliqueCheck(Map, FinishCount))
+	{
+		return true;
+	}
+
+	if (TotalSelected == MaxCount)
+	{
+		printf("引き分けです\n");
+		return true;
+	}
+
+	return false;
+}
+
+bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount)
+{
 	// 自分を見るのは、自分じゃないときのターン
-	// 縦列を軸に、横列、斜め列も見ていく
-	int32_t HoriCount[MAP_WIDTH / 2] = { 0, };
-	int32_t ObliqueCount = 0;
-	int32_t InvObliqueCount = 0;
-	for (int32_t j = 0; j < MAP_WIDTH; j += 2)
+
+	// どれだけ選択されてるか
+	int32_t SelectedNum = 0;
+
+	// 縦列を軸に、横列も見る
+	int32_t HoriCount[HALF_MAP_WIDTH] = { 0, };
+	for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
 	{
 		int32_t VertCount = 0;
 		if (!NowTurn)
 		{
-			for (int32_t i = 0; i < MAP_HEIGHT; i += 2)
+			for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
 			{
 				if (Map[i][j] == EChipCate::Square)
 					continue;
@@ -269,11 +289,11 @@ bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
 				if (Map[i][j] == EChipCate::Circle)
 				{
 					VertCount++;
-					HoriCount[i / 2]++;
+					HoriCount[i]++;
 				}
 				else
 				{
-					TotalSelected++;
+					SelectedNum++;
 				}
 			}
 
@@ -285,7 +305,7 @@ bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
 		}
 		else
 		{
-			for (int32_t i = 0; i < MAP_HEIGHT; i += 2)
+			for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
 			{
 				if (Map[i][j] == EChipCate::Square)
 					continue;
@@ -293,11 +313,11 @@ bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
 				if (Map[i][j] == EChipCate::Cross)
 				{
 					VertCount++;
-					HoriCount[i / 2]++;
+					HoriCount[i]++;
 				}
 				else
 				{
-					TotalSelected++;
+					SelectedNum++;
 				}
 			}
 
@@ -307,11 +327,11 @@ bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
 				return true;
 			}
 		}
-		TotalSelected += VertCount;
+		SelectedNum += VertCount;
 	}
 
 	// 横列の判定
-	for (int32_t j = 0; j < MAP_WIDTH / 2; j++)
+	for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
 	{
 		if (HoriCount[j] == FinishCount)
 		{
@@ -327,97 +347,98 @@ bool FinishCheck(int32_t Map[MAP_HEIGHT][MAP_WIDTH])
 			}
 		}
 	}
-	
-	// 正斜め列()
-	for (int32_t i = 0; i < MAP_HEIGHT; i += 2)
-	{
-		for (int32_t j = 0; j < MAP_WIDTH; j += 2)
-		{
-			if (i != j)
-				continue;
 
-			if (!NowTurn)
+	// 合計を保存
+	TotalSelected = SelectedNum;
+
+	return false;
+}
+
+bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount)
+{
+	int32_t ObliqueCount = 0;
+	int32_t InvObliqueCount = 0;
+
+	// 正斜め列
+	for (int32_t j = 0, i = 0; j < HALF_MAP_WIDTH && i < HALF_MAP_HEIGHT; j++, i++)
+	{
+		if (!NowTurn)
+		{
+			if (Map[i][j] == EChipCate::Circle)
 			{
-				if (Map[i][j] == EChipCate::Circle)
-				{
-					ObliqueCount++;
-				}
-				else
-				{
-					break;
-				}
+				ObliqueCount++;
 			}
 			else
 			{
-				if (Map[i][j] == EChipCate::Cross)
-				{
-					ObliqueCount++;
-				}
-				else
-				{
-					break;
-				}
+				break;
 			}
 		}
-
-		if (ObliqueCount == FinishCount)
+		else
 		{
-			if (!NowTurn)
+			if (Map[i][j] == EChipCate::Cross)
 			{
-				printf("◯の勝ち\n");
-				return true;
+				ObliqueCount++;
 			}
 			else
 			{
-				printf("×の勝ち\n");
-				return true;
+				break;
 			}
+		}
+	}
+
+	if (ObliqueCount == FinishCount)
+	{
+		if (!NowTurn)
+		{
+			printf("◯の勝ち\n");
+			return true;
+		}
+		else
+		{
+			printf("×の勝ち\n");
+			return true;
 		}
 	}
 
 	// 逆斜め列()
-	for (int32_t i = 0; i < MAP_HEIGHT; i += 2)
+	for (int32_t i = 0, j = HALF_MAP_WIDTH - 1; i < HALF_MAP_HEIGHT && j >= 0; i++, j--)
 	{
-		for (int32_t j = 0; j < MAP_WIDTH; j += 2)
+		if (!NowTurn)
 		{
-			if ((i != 0 || j != MAP_WIDTH - 2))
-				continue;
-				
-			if (!NowTurn)
+			if (Map[i][j] == EChipCate::Circle)
 			{
-				if (Map[i][j] == EChipCate::Circle && 
-					Map[j][i] == EChipCate::Circle &&
-					Map[i + 2][j - 2] == EChipCate::Circle)
-				{
-					printf("◯の勝ち\n");
-					return true;
-				}
-				else
-				{
-					break;
-				}
+				InvObliqueCount++;
 			}
 			else
 			{
-				if (Map[i][j] == EChipCate::Cross &&
-					Map[j][i] == EChipCate::Cross &&
-					Map[i + 2][j - 2] == EChipCate::Cross)
-				{
-					printf("×の勝ち\n");
-					return true;
-				}
-				else
-				{
-					break;
-				}
+				break;
+			}
+		}
+		else
+		{
+			if (Map[i][j] == EChipCate::Cross)
+			{
+				InvObliqueCount++;
+			}
+			else
+			{
+				break;
 			}
 		}
 	}
 
-	if (TotalSelected == MaxCount)
+	if (InvObliqueCount == FinishCount)
 	{
-		printf("引き分けです\n");
-		return true;
+		if (!NowTurn)
+		{
+			printf("◯の勝ち\n");
+			return true;
+		}
+		else
+		{
+			printf("×の勝ち\n");
+			return true;
+		}
 	}
 
 	return false;
