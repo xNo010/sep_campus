@@ -19,6 +19,114 @@ void Initialize()
 
 	ZeroMemory(PieceMap, sizeof(PieceMap));
 	ZeroMemory(DrawMap, sizeof(DrawMap));
+	ZeroMemory(Shogi, sizeof(Shogi));
+	ZeroMemory(ShogiHistory, sizeof(ShogiHistory));
+
+	// 駒用マップと情報格納
+	for (int32_t i = 0, k = 0; i < VERT_NUM && k < PIECE_ALLOCNUM; i++)
+	{
+		switch (i)
+		{
+		case 0:
+		case VERT_NUM - 1:
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				switch (j)
+				{
+				case 0:
+				case HORI_NUM - 1:
+					PieceMap[i][j] = EChipCate::Piece_Lance;
+					break;
+				case 1:
+				case HORI_NUM - 2:
+					PieceMap[i][j] = EChipCate::Piece_Knight;
+					break;
+				case 2:
+				case HORI_NUM - 3:
+					PieceMap[i][j] = EChipCate::Piece_SilverGeneral;
+					break;
+				case 3:
+				case HORI_NUM - 4:
+					PieceMap[i][j] = EChipCate::Piece_GoldGeneral;
+					break;
+				default:
+					PieceMap[i][j] = EChipCate::Piece_King;
+					break;
+				}
+
+				if (i == 0)
+				{
+					Shogi[k].Which = false;
+				}
+				else
+				{
+					Shogi[k].Which = true;
+				}
+				Shogi[k].Pos = { j, i };
+				Shogi[k].Piece = PieceMap[i][j];
+				k++;
+			}
+			break;
+		case 1:
+		case VERT_NUM - 2:
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				switch (j)
+				{
+				case 1:
+					PieceMap[i][j] = EChipCate::Piece_Bishop;
+					break;
+				case HORI_NUM - 2:
+					PieceMap[i][j] = EChipCate::Piece_Rook;
+					break;
+				default:
+					PieceMap[i][j] = EChipCate::Piece_None;
+					break;
+				}
+
+				if (PieceMap[i][j] == EChipCate::Piece_None)
+					continue;
+
+				if (i == 1)
+				{
+					Shogi[k].Which = false;
+				}
+				else
+				{
+					Shogi[k].Which = true;
+				}
+				Shogi[k].Pos = { j, i };
+				Shogi[k].Piece = PieceMap[i][j];
+				k++;
+			}
+			break;
+		case 2:
+		case VERT_NUM - 3:
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				PieceMap[i][j] = EChipCate::Piece_Pawn;
+
+				if (i == 2)
+				{
+					Shogi[k].Which = false;
+				}
+				else
+				{
+					Shogi[k].Which = true;
+				}
+				Shogi[k].Pos = { j, i };
+				Shogi[k].Piece = PieceMap[i][j];
+				k++;
+			}
+			break;
+		default:
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				PieceMap[i][j] = EChipCate::Piece_None;
+			}
+			break;
+		}
+	}
 
 	for (int32_t i = 0; i < MAP_HEIGHT; i++)
 	{
@@ -28,7 +136,7 @@ void Initialize()
 			{
 				if (j % 2 == 0)
 				{
-					DrawMap[i][j] = EChipCate::None;
+					DrawMap[i][j] = PieceMap[i / 2][j / 2];
 				}
 				else
 				{
@@ -49,6 +157,7 @@ void Initialize()
 		}
 	}
 
+	printf("将棋を始めます\n");
 	Draw();
 }
 
@@ -93,19 +202,36 @@ void Draw()
 		{
 			switch (DrawMap[i][j])
 			{
-			case EChipCate::None:
+			case EChipCate::Piece_None:
 				printf("□");
+				break;
+			case EChipCate::Piece_King:
+				printf("王");
+				break;
+			case EChipCate::Piece_GoldGeneral:
+				printf("金");
+				break;
+			case EChipCate::Piece_SilverGeneral:
+				printf("銀");
+				break;
+			case EChipCate::Piece_Knight:
+				printf("桂");
+				break;
+			case EChipCate::Piece_Lance:
+				printf("香");
+				break;
+			case EChipCate::Piece_Rook:
+				printf("飛");
+				break;
+			case EChipCate::Piece_Bishop:
+				printf("角");
+				break;
+			case EChipCate::Piece_Pawn:
+				printf("歩");
 				break;
 			case EChipCate::Space:
 				printf("　");
 				break;
-			case EChipCate::Piece:
-				printf("歩");
-				//switch ()
-				//{
-				//default:
-				//	break;
-				//}
 			case EChipCate::Cross:
 				printf(" ┼");
 				if (j == MAP_WIDTH - 1)

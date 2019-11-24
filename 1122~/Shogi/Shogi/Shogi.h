@@ -10,17 +10,27 @@
 #define MAP_WIDTH	18
 #define VERT_NUM	9
 #define HORI_NUM	9
+#define MAX_SAVE	100
+#define PIECE_ALLOCNUM	40
 
 enum EChipCate
 {
-	None,
+	Piece_King,
+	Piece_None,
+	Piece_GoldGeneral,
+	Piece_SilverGeneral,
+	Piece_Knight,
+	Piece_Lance,
+	Piece_Rook,
+	Piece_Bishop,
+	Piece_Pawn,
 	Space,
-	Piece,
-	Cross
+	Cross,
 };
 
 enum EPieceCate
 {
+	None,
 	King,
 	GoldGeneral,
 	SilverGeneral,
@@ -32,14 +42,45 @@ enum EPieceCate
 	Max
 };
 
+enum EHand
+{
+	First,
+	Second
+};
+
+struct POSITION
+{
+	int32_t x;
+	int32_t y;
+
+	void operator = (const POSITION& p)
+	{
+		x = p.x;
+		y = p.y;
+	}
+
+	int32_t operator == (const POSITION& p) const
+	{
+		return x == p.x && y == p.y;
+	}
+	int32_t operator != (const POSITION& p) const
+	{
+		return x != p.x || y != p.y;
+	}
+
+};
 struct SHOGIINFO
 {
-
+	bool Which;	// true:êÊéË false:å„éË
+	POSITION Pos;
+	int32_t Piece;
 };
 
 std::string Kanji[9];
 int32_t PieceMap[VERT_NUM][HORI_NUM];
 int32_t DrawMap[MAP_HEIGHT][MAP_WIDTH];
+SHOGIINFO Shogi[PIECE_ALLOCNUM];
+SHOGIINFO ShogiHistory[MAX_SAVE];
 
 void Initialize();
 void Draw();
