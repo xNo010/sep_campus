@@ -6,12 +6,12 @@
 #include <string>
 #include <Windows.h>
 
-#define MAP_HEIGHT	17
-#define MAP_WIDTH	18
-#define VERT_NUM	9
-#define HORI_NUM	9
-#define MAX_SAVE	100
-#define PIECE_ALLOCNUM	40
+#define MAP_HEIGHT		17
+#define MAP_WIDTH		18
+#define VERT_NUM		9
+#define HORI_NUM		9
+#define PIECE_ALLOCNUM	(20 * 2)
+#define MAX_SAVE		100
 
 enum EChipCate
 {
@@ -69,7 +69,7 @@ struct POSITION
 	}
 
 };
-struct SHOGIINFO
+struct PIECEINFO
 {
 	bool Which;	// true:êÊéË false:å„éË
 	POSITION Pos;
@@ -79,8 +79,8 @@ struct SHOGIINFO
 std::string Kanji[9];
 int32_t PieceMap[VERT_NUM][HORI_NUM];
 int32_t DrawMap[MAP_HEIGHT][MAP_WIDTH];
-SHOGIINFO Shogi[PIECE_ALLOCNUM];
-SHOGIINFO ShogiHistory[MAX_SAVE];
+PIECEINFO Shogi[PIECE_ALLOCNUM];
+PIECEINFO ShogiHistory[MAX_SAVE];
 
 void Initialize();
 void Draw();
@@ -98,5 +98,5 @@ void Draw();
 // Ñ° Ñ¢
 // Ñ£ Ñ§
 // Ñ• Ñ¶
-// ÑßÑ® 
+// Ñß Ñ® 
 // Ñ©

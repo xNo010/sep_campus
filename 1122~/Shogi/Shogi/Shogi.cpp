@@ -62,7 +62,7 @@ void Initialize()
 				{
 					Shogi[k].Which = true;
 				}
-				Shogi[k].Pos = { j, i };
+				Shogi[k].Pos = { j + 1, i + 1 };
 				Shogi[k].Piece = PieceMap[i][j];
 				k++;
 			}
@@ -95,7 +95,7 @@ void Initialize()
 				{
 					Shogi[k].Which = true;
 				}
-				Shogi[k].Pos = { j, i };
+				Shogi[k].Pos = { j + 1, i + 1 };
 				Shogi[k].Piece = PieceMap[i][j];
 				k++;
 			}
@@ -114,7 +114,7 @@ void Initialize()
 				{
 					Shogi[k].Which = true;
 				}
-				Shogi[k].Pos = { j, i };
+				Shogi[k].Pos = { j + 1, i + 1 };
 				Shogi[k].Piece = PieceMap[i][j];
 				k++;
 			}
