@@ -13,8 +13,12 @@ int main()
 		Length++;
 	}
 
-	for (int32_t i = Length - 1; i >= 0; i--)
+	/*for (int32_t i = Length - 1; i >= 0; i--)
 	{
 		printf("%c", strings[i]);
+	}*/
+	for (Length--; Length >= 0; Length--)
+	{
+		printf("%c", strings[Length]);
 	}
 }

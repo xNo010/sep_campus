@@ -16,10 +16,10 @@ int main()
 
 	for (int32_t i = 0; i <= offset; i++)
 	{
-		printf("%c", a + i);
-		if (i != 0 && i % ColumnCount == 0)
+		if (i > 0 && i % ColumnCount == 0)
 		{
 			printf("\n");
 		}
+		printf("%c", a + i);
 	}
 }

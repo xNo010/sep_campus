@@ -2,9 +2,8 @@
 
 int main()
 {
-	char a = 'A';
-
 	int32_t offset = 'a' - 'A';
+	char a = 'A';
 
 	printf("元の文字:%c\n", a);
 

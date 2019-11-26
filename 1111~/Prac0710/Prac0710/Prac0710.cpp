@@ -4,7 +4,7 @@ int main()
 {
 	char str[_MAX_PATH] = "";
 	int Len = 0;
-	int32_t UpperCase = 0;
+	int32_t UpperCaseCount = 0;
 
 	scanf_s("%100s", str, 100);
 
@@ -17,11 +17,11 @@ int main()
 	{
 		if (!(str[i] >= 'a' && str[i] <= 'z'))
 		{
-			str[UpperCase++] = str[i];
+			str[UpperCaseCount++] = str[i];
 		}
 	}
 
-	str[UpperCase] = 0;
+	str[UpperCaseCount] = 0;
 
 	printf("%s", str);
 }
