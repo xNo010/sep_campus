@@ -148,7 +148,6 @@ void Update()
 		}
 	}
 
-
 	Draw();
 }
 
