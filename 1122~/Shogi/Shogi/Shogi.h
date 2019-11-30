@@ -6,38 +6,20 @@
 #include <string>
 #include <Windows.h>
 
-#define MAP_HEIGHT		17
-#define MAP_WIDTH		18
 #define VERT_NUM		9
 #define HORI_NUM		9
-#define PIECE_ALLOCNUM	(20 * 2)
 #define MAX_SAVE		100
 
-enum EChipCate
-{
-	Piece_King,
-	Piece_None,
-	Piece_GoldGeneral,
-	Piece_SilverGeneral,
-	Piece_Knight,
-	Piece_Lance,
-	Piece_Rook,
-	Piece_Bishop,
-	Piece_Pawn,
-	Space,
-	Cross,
-};
-
-enum EPieceCate
+enum EPiece
 {
 	None,
 	King,
-	GoldGeneral,
-	SilverGeneral,
+	Gold,
+	Silver,
 	Knight,
 	Lance,
-	Rook,
 	Bishop,
+	Rook,
 	Pawn,
 	Max
 };
@@ -45,7 +27,8 @@ enum EPieceCate
 enum EHand
 {
 	First,
-	Second
+	Second,
+	MaxHand
 };
 
 struct POSITION
@@ -53,10 +36,22 @@ struct POSITION
 	int32_t x;
 	int32_t y;
 
+	POSITION() { x = 0, y = 0; };
+
+	POSITION(int32_t ax, int32_t ay)
+	{
+		x = ax;
+		y = ay;
+	}
 	void operator = (const POSITION& p)
 	{
 		x = p.x;
 		y = p.y;
+	}
+
+	POSITION operator - (const POSITION& p) const
+	{
+		return POSITION(x - p.x, y - p.y);
 	}
 
 	int32_t operator == (const POSITION& p) const
@@ -69,31 +64,42 @@ struct POSITION
 	}
 
 };
-struct PIECEINFO
+
+struct RECORDINFO
 {
-	bool Which;	// true:êÊéË false:å„éË
+	int32_t Which;	// 0:êÊéË 1:å„éË
 	POSITION Pos;
 	int32_t Piece;
+	
+	struct RECORDINFO()
+	{
+		Which = false;
+		Pos = { 0, 0 };
+		Piece = EPiece::None;
+	}
 };
 
 std::string Kanji[9];
 int32_t PieceMap[VERT_NUM][HORI_NUM];
-int32_t DrawMap[MAP_HEIGHT][MAP_WIDTH];
-PIECEINFO Shogi[PIECE_ALLOCNUM];
-PIECEINFO ShogiHistory[MAX_SAVE];
+int32_t WhichHand;
+POSITION TopPiecePos[EHand::MaxHand][HORI_NUM];
+int32_t NowTopHoriNum;
+POSITION SaveInputPos;
+RECORDINFO InputRecord;
+RECORDINFO SaveRecord[MAX_SAVE];
+int32_t SaveCount;
 
 void Initialize();
+void InputFunc(POSITION* pPos);
+bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM]);
+bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM]);
+void Update();
+void RecordDraw();
 void Draw();
 
 #endif /* __SHOGI_H__ */
 
 // ÉÅÉÇ årê¸ëfï–
-// Ñ™ Ñ´
-// Ñ¨ Ñ≠
-// ÑÆ ÑØ
-// Ñ∞ Ñ±
-// Ñ≤ Ñ≥
-// Ñ¥
 // Ñü Ñ†
 // Ñ° Ñ¢
 // Ñ£ Ñ§
