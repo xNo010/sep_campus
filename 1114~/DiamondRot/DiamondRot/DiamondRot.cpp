@@ -2,6 +2,7 @@
 #include <Windows.h>
 
 #define MaxSize 7
+#define DiaCenter ((MaxSize - 1) / 2)
 
 int main()
 {
@@ -16,10 +17,12 @@ int main()
 		}
 	}
 
-	first = 2;
-	end =	4;
+	Diamond[DiaCenter][DiaCenter] = 1;
 
-	while (first >= 0 || end < MaxSize)
+	first = DiaCenter;
+	end = DiaCenter;
+
+	while (first >= 0 && end < MaxSize)
 	{
 		for (int32_t i = 0; i < MaxSize; i++)
 		{
@@ -42,15 +45,18 @@ int main()
 			}
 		}
 
-		for (int32_t i = first; i < end; i++)
-		{
-			Diamond[i][i + 1] = 1;
-		}
-		for (int32_t i = end; i > first; i--)
-		{
-			Diamond[i][i - 1] = 1;
-		}
+		// 中心から上下左右に
+		Diamond[first - 1][first] = Diamond[first][first];
+		Diamond[first + 1][end] = Diamond[first][first];
+		Diamond[end][first - 1] = Diamond[first][first];
+		Diamond[end][end + 1] = Diamond[first][first];
 
+		// 元の場所は消す
+		Diamond[first][first] = 0;
+		Diamond[first][end] = 0;
+		Diamond[end][first] = 0;
+		Diamond[end][end] = 0;
+	
 		first--;
 		end++;
 
