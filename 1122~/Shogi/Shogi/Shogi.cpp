@@ -338,14 +338,17 @@ void Update()
 	PieceMap[InputRecord.Pos.y][InputRecord.Pos.x] = PieceMap[SaveInputPos.y][SaveInputPos.x];
 	PieceMap[SaveInputPos.y][SaveInputPos.x] = temp;
 
-	// 先手/後手の駒のトップはどこなのかチェック
 	int32_t NowHand = WhichHand % 2;
+	// 先手/後手の駒それぞれで一番先にあるのはどこなのかチェック
 	if (NowHand == 0)
 	{
+		// 入力された値が先にある駒より小さければTop更新
 		if (InputRecord.Pos.y < TopPiecePos[NowHand][NowTopHoriNum].y)
 		{
 			TopPiecePos[NowHand][NowTopHoriNum] = { InputRecord.Pos.x, InputRecord.Pos.y };
 		}
+
+		// トップが同じ状態で複数あるならx座標で見る
 		if (InputRecord.Pos.y == TopPiecePos[NowHand][NowTopHoriNum].y &&
 			InputRecord.Pos.x != TopPiecePos[NowHand][NowTopHoriNum].x)
 		{
@@ -354,10 +357,13 @@ void Update()
 	}
 	else
 	{
-		if (InputRecord.Pos.y < TopPiecePos[NowHand][NowTopHoriNum].y)
+		// 入力された値が先にある駒より大きければTop更新
+		if (InputRecord.Pos.y > TopPiecePos[NowHand][NowTopHoriNum].y)
 		{
 			TopPiecePos[NowHand][NowTopHoriNum] = { InputRecord.Pos.x, InputRecord.Pos.y };
 		}
+
+		// トップが同じ状態で複数あるならx座標で見る
 		if (InputRecord.Pos.y == TopPiecePos[NowHand][NowTopHoriNum].y &&
 			InputRecord.Pos.x != TopPiecePos[NowHand][NowTopHoriNum].x)
 		{
@@ -365,14 +371,16 @@ void Update()
 		}
 	}
 
+	// 盤描画
 	Draw();
+
+	// 棋譜描画
 	RecordDraw();
 }
 
 void RecordDraw()
 {
-	std::string Record = "";
-
+	// 配列外処理
 	if (WhichHand == MAX_SAVE - 1)
 	{
 		printf("それ以上保存できません\n");
@@ -413,23 +421,19 @@ void RecordDraw()
 		break;
 	}
 
+	// 
 	for (int32_t i = 0; i <= WhichHand; i++)
 	{
-		if (NowHand == 0)
+		std::string Record = "";
+		if (i % 2 == 0)
 		{
-			if (i % 2 == 0)
-			{
-				Record += "先" + Kanji[SaveRecord[i].Pos.y];
-				printf("%s%d%s\n", Record.c_str(), SaveRecord[i].Pos.x + 1, PieceCate.c_str());
-			}
+			Record += "先-" + Kanji[SaveRecord[i].Pos.y];
+			printf("%s%d-%s\n", Record.c_str(), SaveRecord[i].Pos.x + 1, PieceCate.c_str());
 		}
 		else
 		{
-			if (i % 2 == 1)
-			{
-				Record += "後" + Kanji[SaveRecord[i].Pos.y];
-				printf("%s%d%s\n", Record.c_str(), SaveRecord[i].Pos.x + 1, PieceCate.c_str());
-			}
+			Record += "後-" + Kanji[SaveRecord[i].Pos.y];
+			printf("%s%d-%s\n", Record.c_str(), SaveRecord[i].Pos.x + 1, PieceCate.c_str());
 		}
 	}
 
