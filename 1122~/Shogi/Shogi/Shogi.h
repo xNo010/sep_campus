@@ -85,7 +85,7 @@ int32_t PieceMap[VERT_NUM][HORI_NUM];			// 将棋盤
 int32_t WhichHand;								// 合計手数
 int32_t NowHand;								// 今が先手か後手かの判断
 POSITION TopPiecePos[EHand::MaxHand][HORI_NUM];	// 先手後手それぞれの一番上の駒座標
-int32_t NowTopHoriNum;							// 判別の際、駒が同じ行に何個あるか
+int32_t NowTopHoriNum[EHand::MaxHand];			// 判別の際、駒が同じ行に何個あるか
 POSITION SaveInputPos[EHand::MaxHand];			// 「待った」用駒選択座標
 POSITION MoveInputPos[EHand::MaxHand];			// 「待った」用移動座標
 RECORDINFO InputRecord;							// 入力された記録

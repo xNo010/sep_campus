@@ -37,7 +37,7 @@ void Initialize()
 	WhichHand = 0;
 	NowHand = 0;
 	ZeroMemory(TopPiecePos, sizeof(TopPiecePos));
-	NowTopHoriNum = 0;
+	ZeroMemory(NowTopHoriNum, sizeof(NowTopHoriNum));
 	ZeroMemory(SaveInputPos, sizeof(SaveInputPos));
 	ZeroMemory(MoveInputPos, sizeof(MoveInputPos));
 	ZeroMemory(SaveRecord, sizeof(SaveRecord));
@@ -91,6 +91,7 @@ void Initialize()
 		}
 	}
 
+	// 最初の表示
 	Draw();
 }
 
@@ -119,7 +120,7 @@ bool InputFunc(POSITION* pPos)
 bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 {
 	NowHand = WhichHand % 2;
-	if (NowHand == 0)
+	if (NowHand == EHand::First)
 	{
 		printf("先手の番\n");
 	}
@@ -145,52 +146,36 @@ bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	// 先手後手それぞれで、現在どの位置に駒があるかのチェック
 	if (NowHand == EHand::First)
 	{
-		if (SaveInputPos[NowHand].y < TopPiecePos[NowHand][NowTopHoriNum].y)
+		if (SaveInputPos[NowHand].y < TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
 			printf("自身の駒ではありません\n");
 			return false;
-		}
-		
-		if (TopPiecePos[NowHand][NowTopHoriNum].y <= TopPiecePos[NowHand][NowTopHoriNum].y)
-		{
-			for (int32_t i = 0; i < NowTopHoriNum; i++)
-			{
-				// 同じ座標のものを見つけたら終わり
-				if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][i].x)
-					break;
-
-				if (i == NowTopHoriNum - 1)
-				{
-					printf("自身の駒ではありません\n");
-					return false;
-				}
-			}
 		}
 	}
 	else
 	{
-		if (SaveInputPos[NowHand].y > TopPiecePos[NowHand][NowTopHoriNum].y)
+		if (SaveInputPos[NowHand].y > TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
 			printf("自身の駒ではありません\n");
 			return false;
 		}
+	}
 
-		if (TopPiecePos[NowHand][NowTopHoriNum].y >= TopPiecePos[NowHand][NowTopHoriNum].y)
+	for (int32_t i = 0; i < NowTopHoriNum[NowHand]; i++)
+	{
+		// 同じ座標のものを見つけたら終わり
+		if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][i].x)
+			break;
+
+		if (i == NowTopHoriNum[NowHand])
 		{
-			for (int32_t i = 0; i < NowTopHoriNum; i++)
-			{
-				// 同じ座標のものを見つけたら終わり
-				if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][NowTopHoriNum].x)
-					break;
-
-				if (i == NowTopHoriNum - 1)
-				{
-					printf("自身の駒ではありません\n");
-					return false;
-				}
-			}
+			printf("自身の駒ではありません\n");
+			return false;
 		}
 	}
+
+	// 駒情報を入れる
+	InputRecord.Piece = PieceMap[SaveInputPos[NowHand].y][SaveInputPos[NowHand].x];
 
 	return true;
 }
@@ -203,15 +188,15 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		return false;
 	}
 
+	// 計算用に更新
+	MoveInputPos[NowHand] = { MoveInputPos[NowHand].x - 1, MoveInputPos[NowHand].y - 1 };
+
 	// 同じマスを選んでいたらfalse
 	if (SaveInputPos[NowHand] == MoveInputPos[NowHand])
 	{
 		printf("同じマスは選べません\n");
 		return false;
 	}
-
-	// 計算用に更新
-	MoveInputPos[NowHand] = { MoveInputPos[NowHand].x - 1, MoveInputPos[NowHand].y - 1 };
 
 	// 駒座標と移動座標の差分を取得
 	POSITION diff = SaveInputPos[NowHand] - MoveInputPos[NowHand];
@@ -239,7 +224,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::King:
 		break;
 	case EPiece::Gold:
-		if (NowHand == 0)
+		if (NowHand == EHand::First)
 		{
 			if (diff.y == +OneCell && (abs(diff.x) == OneCell))
 			{
@@ -257,7 +242,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		break;
 	case EPiece::Silver:
-		if (NowHand == 0)
+		if (NowHand == EHand::First)
 		{
 			if ((diff.x == 0 && diff.y == -OneCell) || (abs(diff.x) == OneCell && diff.y == 0))
 			{
@@ -275,7 +260,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		break;
 	case EPiece::Knight:
-		if (NowHand == 0)
+		if (NowHand == EHand::First)
 		{
 			if (abs(diff.x) == 0 || diff.y != TwoCell)
 			{
@@ -293,7 +278,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		break;
 	case EPiece::Lance:
-		if (NowHand == 0)
+		if (NowHand == EHand::First)
 		{
 			if (abs(diff.x) != 0 || diff.y < 0)
 			{
@@ -326,7 +311,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		break;
 	case EPiece::Pawn:
-		if (NowHand == 0)
+		if (NowHand == EHand::First)
 		{
 			if (diff.x != 0 || diff.y != +OneCell)
 			{
@@ -352,8 +337,6 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 
 void Update()
 {
-	int32_t temp;
-
 	// 最初に「待った」をするかのチェック
 	if (BackCheck())
 	{
@@ -366,9 +349,12 @@ void Update()
 		// 盤描画
 		Draw();
 
+		// 棋譜用に一つ戻す
+		WhichHand--;
 		// 棋譜描画
 		RecordsDraw();
-		WhichHand--;
+		// 元に戻す
+		WhichHand++;
 
 		// 待ったの処理をしたので終了
 		return;
@@ -380,41 +366,41 @@ void Update()
 	}
 
 	// 先手/後手の駒それぞれで一番先にあるのはどこなのかチェック
-	if (NowHand == 0)
+	if (NowHand == EHand::First)
 	{
 		// 入力された値が先にある駒より小さければTop更新
-		if (MoveInputPos[NowHand].y < TopPiecePos[NowHand][NowTopHoriNum].y)
+		if (MoveInputPos[NowHand].y < TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
-			TopPiecePos[NowHand][NowTopHoriNum] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
-		}
-
-		// トップが同じ状態で複数あるならx座標で見る
-		if (MoveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum].y &&
-			MoveInputPos[NowHand].x != TopPiecePos[NowHand][NowTopHoriNum].x)
-		{
-			TopPiecePos[NowHand][++NowTopHoriNum] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				// 全ての座標を更新する
+				TopPiecePos[NowHand][j] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
+			}
 		}
 	}
 	else
 	{
 		// 入力された値が先にある駒より大きければTop更新
-		if (MoveInputPos[NowHand].y > TopPiecePos[NowHand][NowTopHoriNum].y)
+		if (MoveInputPos[NowHand].y > TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
-			TopPiecePos[NowHand][NowTopHoriNum] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
-		}
-
-		// トップが同じ状態で複数あるならx座標で見る
-		if (MoveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum].y &&
-			MoveInputPos[NowHand].x != TopPiecePos[NowHand][NowTopHoriNum].x)
-		{
-			TopPiecePos[NowHand][++NowTopHoriNum] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
+			for (int32_t j = 0; j < HORI_NUM; j++)
+			{
+				// 全ての座標を更新する
+				TopPiecePos[NowHand][j] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
+			}
 		}
 	}
 
-	// 先手か後手か + 駒情報 + 移動座標を入れる
+	// トップが同じ状態で複数あるならx座標で見る
+	if (MoveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y &&
+		MoveInputPos[NowHand].x != TopPiecePos[NowHand][NowTopHoriNum[NowHand]].x)
+	{
+		TopPiecePos[NowHand][++NowTopHoriNum[NowHand]] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
+	}
+
+	// 先手か後手か + 移動座標を入れる
 	InputRecord.Which = NowHand;
 	InputRecord.Pos = MoveInputPos[NowHand];
-	InputRecord.Piece = PieceMap[SaveInputPos[NowHand].y][SaveInputPos[NowHand].x];
 
 	// 入力値を参考に値の入れ替え
 	PieceMap[MoveInputPos[NowHand].y][MoveInputPos[NowHand].x] = InputRecord.Piece;
@@ -425,6 +411,9 @@ void Update()
 
 	// 棋譜描画
 	RecordsDraw();
+
+	// 先手後手交代
+	WhichHand++;
 }
 
 bool BackCheck()
@@ -560,7 +549,4 @@ void RecordsDraw()
 		}
 	}
 	printf("\n");
-
-	// 先手後手交代
-	WhichHand++;
 }
