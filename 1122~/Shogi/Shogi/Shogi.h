@@ -21,7 +21,7 @@ enum EPiece			// 駒の種類
 	Bishop,
 	Rook,
 	Pawn,
-	Max
+	MaxPiece
 };
 
 enum EHand			// 先手後手
@@ -93,8 +93,10 @@ RECORDINFO SaveRecord[MAX_SAVE];				// 入力した記録を保存する
 
 void Initialize();													// 初期化
 bool InputFunc(POSITION* pPos);										// 入力関数
-bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM]);		// 駒があるかの判定
-bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM]);	// 駒が動けるかの判定
+bool InputPos_IfPiece(
+	int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInputPos);		// 駒があるかの判定
+bool InputPos_IfMovePiece(
+	int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInputPos);		// 駒が動けるかの判定
 void Update();														// 更新処理
 bool BackCheck();													// 「待った」の判定
 void Draw();														// マップ描画

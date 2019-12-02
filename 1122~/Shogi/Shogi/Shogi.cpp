@@ -6,12 +6,12 @@ int main()
 
 	while (1)
 	{
-		if (!InputPos_IfPiece(PieceMap))
+		if (!InputPos_IfPiece(PieceMap, &SaveInputPos[NowHand]))
 		{
 			printf("\n");
 			continue;
 		}
-		if (!InputPos_IfMovePiece(PieceMap))
+		if (!InputPos_IfMovePiece(PieceMap, &MoveInputPos[NowHand]))
 		{
 			printf("\n");
 			continue;
@@ -35,7 +35,7 @@ void Initialize()
 	}
 
 	WhichHand = 0;
-	NowHand = 0;
+	NowHand = WhichHand % 2;
 	ZeroMemory(TopPiecePos, sizeof(TopPiecePos));
 	ZeroMemory(NowTopHoriNum, sizeof(NowTopHoriNum));
 	ZeroMemory(SaveInputPos, sizeof(SaveInputPos));
@@ -45,7 +45,7 @@ void Initialize()
 
 	// 駒をマップに配置
 	const int32_t Center = 4;
-	const int32_t TwoCell = 2;
+	const int32_t ThreeCell = 3;
 	int32_t PieceInfo = EPiece::King;
 	for (int32_t i = 0; i < VERT_NUM / 3; i++)
 	{
@@ -53,8 +53,10 @@ void Initialize()
 		switch (i)
 		{
 		case 0:
+			// 玉/王
 			PieceMap[i][Center] = PieceInfo;
 			PieceMap[VERT_NUM - i - 1][Center] = PieceInfo;
+			// 金～香
 			while (LeftShift != 0 && RightShift != 0)
 			{
 				PieceInfo++;
@@ -65,17 +67,22 @@ void Initialize()
 			}
 			break;
 		case 1:
+			// 角
 			PieceInfo++;
-			LeftShift -= TwoCell;
-			PieceMap[i][LeftShift] = PieceInfo;
+			LeftShift -= ThreeCell;
+			RightShift += ThreeCell;
+
+			PieceMap[i][RightShift] = PieceInfo;
 			PieceMap[VERT_NUM - i - 1][LeftShift] = PieceInfo;
 			
+			// 飛
 			PieceInfo++;
-			RightShift += TwoCell;
-			PieceMap[i][RightShift] = PieceInfo;
+
+			PieceMap[i][LeftShift] = PieceInfo;
 			PieceMap[VERT_NUM - i - 1][RightShift] = PieceInfo;
 			break;
 		case 2:
+			// 歩
 			PieceInfo++;
 			for (int32_t j = 0; j < HORI_NUM; j++)
 			{
@@ -98,7 +105,7 @@ void Initialize()
 bool InputFunc(POSITION* pPos)
 {
 	ZeroMemory(pPos, sizeof(POSITION));
-	printf("数字部分を整数で入力:");
+	printf("列の選択(整数で入力):");
 	scanf_s("%d", &pPos->x);
 	// 将棋盤の外に行ってしまったかのチェック
 	if (pPos->x <= 0 || HORI_NUM < pPos->x)
@@ -106,7 +113,7 @@ bool InputFunc(POSITION* pPos)
 		printf("そこは盤の外です\n");
 		return false;
 	}
-	printf("漢数字部分を整数で入力:");
+	printf("段の選択(整数で入力):");
 	scanf_s("%d", &pPos->y);
 	if (pPos->y <= 0 || VERT_NUM < pPos->y)
 	{
@@ -117,9 +124,8 @@ bool InputFunc(POSITION* pPos)
 	return true;
 }
 
-bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
+bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInputPos)
 {
-	NowHand = WhichHand % 2;
 	if (NowHand == EHand::First)
 	{
 		printf("先手の番\n");
@@ -161,16 +167,19 @@ bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 	}
 
-	for (int32_t i = 0; i < NowTopHoriNum[NowHand]; i++)
+	if (SaveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 	{
-		// 同じ座標のものを見つけたら終わり
-		if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][i].x)
-			break;
-
-		if (i == NowTopHoriNum[NowHand])
+		for (int32_t i = 0; i < NowTopHoriNum[NowHand]; i++)
 		{
-			printf("自身の駒ではありません\n");
-			return false;
+			// 同じ座標のものを見つけたら終わり
+			if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][i].x)
+				break;
+
+			if (i == NowTopHoriNum[NowHand] - 1)
+			{
+				printf("自身の駒ではありません\n");
+				return false;
+			}
 		}
 	}
 
@@ -180,7 +189,7 @@ bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	return true;
 }
 
-bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
+bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInputPos)
 {
 	printf("駒を動かす座標選択\n");
 	if (!InputFunc(&MoveInputPos[NowHand]))
@@ -199,10 +208,10 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	}
 
 	// 駒座標と移動座標の差分を取得
-	POSITION diff = SaveInputPos[NowHand] - MoveInputPos[NowHand];
+	POSITION DiffCell = SaveInputPos[NowHand] - MoveInputPos[NowHand];
 
 	// 2マス以上進もうとした際、一度に2マス以上進めない駒かのチェック
-	if ((abs(diff.x) > 1 || abs(diff.y) > 1)&& 
+	if ((abs(DiffCell.x) > 1 || abs(DiffCell.y) > 1)&& 
 		((InputRecord.Piece >= EPiece::King && EPiece::Silver >= InputRecord.Piece) || InputRecord.Piece == EPiece::Pawn))
 	{
 		printf("選択した駒は、そこには置けません\n");
@@ -226,7 +235,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::Gold:
 		if (NowHand == EHand::First)
 		{
-			if (diff.y == +OneCell && (abs(diff.x) == OneCell))
+			if (DiffCell.y == +OneCell && (abs(DiffCell.x) == OneCell))
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -234,7 +243,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		else
 		{
-			if (diff.y == -OneCell && (abs(diff.x) == OneCell))
+			if (DiffCell.y == -OneCell && (abs(DiffCell.x) == OneCell))
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -244,7 +253,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::Silver:
 		if (NowHand == EHand::First)
 		{
-			if ((diff.x == 0 && diff.y == -OneCell) || (abs(diff.x) == OneCell && diff.y == 0))
+			if ((DiffCell.x == 0 && DiffCell.y == -OneCell) || (abs(DiffCell.x) == OneCell && DiffCell.y == 0))
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -252,7 +261,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		else
 		{
-			if ((diff.x == 0 && diff.y == +OneCell) || (abs(diff.x) == OneCell && diff.y == 0))
+			if ((DiffCell.x == 0 && DiffCell.y == +OneCell) || (abs(DiffCell.x) == OneCell && DiffCell.y == 0))
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -262,7 +271,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::Knight:
 		if (NowHand == EHand::First)
 		{
-			if (abs(diff.x) == 0 || diff.y != TwoCell)
+			if (abs(DiffCell.x) == 0 || DiffCell.y != TwoCell)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -270,7 +279,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		else
 		{
-			if (abs(diff.x) == 0 || diff.y != -TwoCell)
+			if (abs(DiffCell.x) == 0 || DiffCell.y != -TwoCell)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -280,7 +289,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::Lance:
 		if (NowHand == EHand::First)
 		{
-			if (abs(diff.x) != 0 || diff.y < 0)
+			if (abs(DiffCell.x) != 0 || DiffCell.y < 0)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -288,7 +297,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		else
 		{
-			if (abs(diff.x) != 0 || diff.y > 0)
+			if (abs(DiffCell.x) != 0 || DiffCell.y > 0)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -296,15 +305,15 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		break;
 	case EPiece::Bishop:
-		if (diff.x + diff.y != 0)
+		if (DiffCell.x + DiffCell.y != 0)
 		{
 			printf("この駒はそこに移動できません\n");
 			return false;
 		}
 		break;
 	case EPiece::Rook:
-		if (diff.x > 0 && diff.y != 0 ||
-			diff.y > 0 && diff.x != 0)
+		if (DiffCell.x > 0 && DiffCell.y != 0 ||
+			DiffCell.y > 0 && DiffCell.x != 0)
 		{
 			printf("この駒はそこに移動できません\n");
 			return false;
@@ -313,7 +322,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 	case EPiece::Pawn:
 		if (NowHand == EHand::First)
 		{
-			if (diff.x != 0 || diff.y != +OneCell)
+			if (DiffCell.x != 0 || DiffCell.y != +OneCell)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -321,7 +330,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 		else
 		{
-			if (diff.x != 0 || diff.y != -OneCell)
+			if (DiffCell.x != 0 || DiffCell.y != -OneCell)
 			{
 				printf("この駒はそこに移動できません\n");
 				return false;
@@ -368,26 +377,20 @@ void Update()
 	// 先手/後手の駒それぞれで一番先にあるのはどこなのかチェック
 	if (NowHand == EHand::First)
 	{
-		// 入力された値が先にある駒より小さければTop更新
+		// 入力されたY座標が上にある駒の座標より小さければTop更新-先手側は値が小さいほど上に行く
 		if (MoveInputPos[NowHand].y < TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
-			for (int32_t j = 0; j < HORI_NUM; j++)
-			{
-				// 全ての座標を更新する
-				TopPiecePos[NowHand][j] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
-			}
+			// 全ての座標を更新する
+			TopPiecePos[NowHand][NowTopHoriNum[NowHand]] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
 		}
 	}
 	else
 	{
-		// 入力された値が先にある駒より大きければTop更新
+		// 入力されたY座標が上にある駒の座標より大きければTop更新-後手側は値が大きいほど上に行く
 		if (MoveInputPos[NowHand].y > TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 		{
-			for (int32_t j = 0; j < HORI_NUM; j++)
-			{
-				// 全ての座標を更新する
-				TopPiecePos[NowHand][j] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
-			}
+			// 全ての座標を更新する
+			TopPiecePos[NowHand][NowTopHoriNum[NowHand]] = { MoveInputPos[NowHand].x, MoveInputPos[NowHand].y };
 		}
 	}
 
@@ -494,48 +497,53 @@ void Draw()
 
 void RecordsDraw()
 {
+	int32_t temp = WhichHand;
 	// 配列外処理
-	if (WhichHand == MAX_SAVE - 1)
+	if (WhichHand == MAX_SAVE)
 	{
 		printf("それ以上保存できません\n");
+
+		// 上書きする形で
+		temp = WhichHand - 1;
 		return;
 	}
 
-	SaveRecord[WhichHand] = InputRecord;
+	SaveRecord[temp] = InputRecord;
 
-	std::string PieceCate = "";
-	switch (SaveRecord[WhichHand].Piece)
+	for (int32_t i = 0; i <= temp; i++)
 	{
-	case EPiece::King:
-		PieceCate += "王";
-		break;
-	case EPiece::Gold:
-		PieceCate += "金";
-		break;
-	case EPiece::Silver:
-		PieceCate += "銀";
-		break;
-	case EPiece::Knight:
-		PieceCate += "桂";
-		break;
-	case EPiece::Lance:
-		PieceCate += "香";
-		break;
-	case EPiece::Rook:
-		PieceCate += "飛";
-		break;
-	case EPiece::Bishop:
-		PieceCate += "角";
-		break;
-	case EPiece::Pawn:
-		PieceCate += "歩";
-		break;
-	default:
-		break;
-	}
+		std::string PieceCate = "";
 
-	for (int32_t i = 0; i <= WhichHand; i++)
-	{
+		switch (SaveRecord[i].Piece)
+		{
+		case EPiece::King:
+			PieceCate += "王";
+			break;
+		case EPiece::Gold:
+			PieceCate += "金";
+			break;
+		case EPiece::Silver:
+			PieceCate += "銀";
+			break;
+		case EPiece::Knight:
+			PieceCate += "桂";
+			break;
+		case EPiece::Lance:
+			PieceCate += "香";
+			break;
+		case EPiece::Rook:
+			PieceCate += "飛";
+			break;
+		case EPiece::Bishop:
+			PieceCate += "角";
+			break;
+		case EPiece::Pawn:
+			PieceCate += "歩";
+			break;
+		default:
+			break;
+		}
+
 		std::string Record = "";
 		if (i % 2 == 0)
 		{
