@@ -167,15 +167,17 @@ bool InputPos_IfPiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInputPos)
 		}
 	}
 
-	if (SaveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
+	// 先手後手が最低一回回った後かつ、入力したY座標が保存された一番上の座標と一致したら
+	if (WhichHand > EHand::Second && SaveInputPos[NowHand].y == TopPiecePos[NowHand][NowTopHoriNum[NowHand]].y)
 	{
-		for (int32_t i = 0; i < NowTopHoriNum[NowHand]; i++)
+		// X座標から同じ駒を探しだす
+		for (int32_t i = 0; i <= NowTopHoriNum[NowHand]; i++)
 		{
 			// 同じ座標のものを見つけたら終わり
 			if (SaveInputPos[NowHand].x == TopPiecePos[NowHand][i].x)
 				break;
 
-			if (i == NowTopHoriNum[NowHand] - 1)
+			if (i == NowTopHoriNum[NowHand])
 			{
 				printf("自身の駒ではありません\n");
 				return false;
@@ -214,7 +216,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 	if ((abs(DiffCell.x) > 1 || abs(DiffCell.y) > 1)&& 
 		((InputRecord.Piece >= EPiece::King && EPiece::Silver >= InputRecord.Piece) || InputRecord.Piece == EPiece::Pawn))
 	{
-		printf("選択した駒は、そこには置けません\n");
+		printf("選択した駒はそこに移動できません\n");
 		return false;
 	}
 
@@ -237,7 +239,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (DiffCell.y == +OneCell && (abs(DiffCell.x) == OneCell))
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -245,7 +247,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (DiffCell.y == -OneCell && (abs(DiffCell.x) == OneCell))
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -255,7 +257,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if ((DiffCell.x == 0 && DiffCell.y == -OneCell) || (abs(DiffCell.x) == OneCell && DiffCell.y == 0))
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -263,7 +265,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if ((DiffCell.x == 0 && DiffCell.y == +OneCell) || (abs(DiffCell.x) == OneCell && DiffCell.y == 0))
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -273,7 +275,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (abs(DiffCell.x) == 0 || DiffCell.y != TwoCell)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -281,7 +283,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (abs(DiffCell.x) == 0 || DiffCell.y != -TwoCell)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -291,7 +293,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (abs(DiffCell.x) != 0 || DiffCell.y < 0)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -299,7 +301,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (abs(DiffCell.x) != 0 || DiffCell.y > 0)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -307,7 +309,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 	case EPiece::Bishop:
 		if (DiffCell.x + DiffCell.y != 0)
 		{
-			printf("この駒はそこに移動できません\n");
+			printf("選択した駒はそこに移動できません\n");
 			return false;
 		}
 		break;
@@ -315,7 +317,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		if (DiffCell.x > 0 && DiffCell.y != 0 ||
 			DiffCell.y > 0 && DiffCell.x != 0)
 		{
-			printf("この駒はそこに移動できません\n");
+			printf("選択した駒はそこに移動できません\n");
 			return false;
 		}
 		break;
@@ -324,7 +326,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (DiffCell.x != 0 || DiffCell.y != +OneCell)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -332,7 +334,7 @@ bool InputPos_IfMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], POSITION* pInput
 		{
 			if (DiffCell.x != 0 || DiffCell.y != -OneCell)
 			{
-				printf("この駒はそこに移動できません\n");
+				printf("選択した駒はそこに移動できません\n");
 				return false;
 			}
 		}
@@ -417,6 +419,7 @@ void Update()
 
 	// 先手後手交代
 	WhichHand++;
+	NowHand = WhichHand % 2;
 }
 
 bool BackCheck()
