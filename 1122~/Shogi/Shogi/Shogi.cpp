@@ -375,6 +375,8 @@ void Update(bool Hand)
 
 		// 棋譜描画用に一つ戻す
 		WhichHand--;
+		// 先手後手入れ替わり
+		Hand = WhichHand % 2;
 		// 棋譜描画
 		RecordsDraw(Hand);
 		// 元に戻す
