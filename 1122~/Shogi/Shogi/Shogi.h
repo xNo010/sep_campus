@@ -88,28 +88,29 @@ POSITION TopPiecePos[EHand::MaxHand][HORI_NUM];					// æèŒãè‚»‚ê‚¼‚ê‚Ìˆê”Ôã‚
 int32_t NowTopHoriNum[EHand::MaxHand];							// ”»•Ê‚ÌÛA‹î‚ª“¯‚¶s‚É‰½ŒÂ‚ ‚é‚©
 POSITION SaveInputPos[EHand::MaxHand];							// u‘Ò‚Á‚½v—p‹î‘I‘ğÀ•W
 POSITION MoveInputPos[EHand::MaxHand];							// u‘Ò‚Á‚½v—pˆÚ“®À•W
+int32_t BackSavePiece[EHand::MaxHand];							// ‘Ò‚Á‚½‚ğ‚µ‚½ÛA‚»‚Ìè‚Å‚¿‹î‚ğŠl“¾‚µ‚Ä‚½‚ç–ß‚µ‚Ä‚â‚é
 int32_t CapturedPieceNum[EHand::MaxHand][EPiece::King];			// ‚¿‹îŠi”[•Ï”
-RECORDINFO InputRecord;											// “ü—Í‚³‚ê‚½‹L˜^
+RECORDINFO InputRecord[EHand::MaxHand];							// “ü—Í‚³‚ê‚½‹L˜^
 RECORDINFO SaveRecord[MAX_SAVE];								// “ü—Í‚µ‚½‹L˜^‚ğ•Û‘¶‚·‚é
 
 void Initialize();												// ‰Šú‰»
 bool InputFunc(POSITION* pPos);									// “ü—ÍŠÖ”
 void InputPos_IsPiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
-	POSITION* pInputPos, bool Hand);							// ‹î‚ª‚ ‚é‚©‚Ì”»’è
-bool InputPos_IsMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM], 
-	POSITION* pInputPos, bool Hand);							// ‹î‚ª“®‚¯‚é‚©‚Ì”»’è
+					POSITION* pInputPos, bool Hand);			// ‹î‚ª‚ ‚é‚©‚Ì”»’è
+bool InputPos_IsMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
+					POSITION* pInputPos, bool Hand);			// ‹î‚ª“®‚¯‚é‚©‚Ì”»’è
 void Update(bool Hand);											// XVˆ—
 bool BackCheck(bool Hand);										// u‘Ò‚Á‚½v‚Ì”»’è
-bool CapPieceConfirm(POSITION InputPos, bool Hand);				// ‚¿‹î‚ÌŠm”F
+bool CapPieceConfirm(POSITION InputPos, bool Hand);				// ‚¿‹î‚Æ‚È‚é‚©‚ÌŠm”F
 bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][EPiece::King],
-	bool Hand);													// ‚¿‹î‚ğg‚¤‚Ì‚©
+										bool Hand);				// ‚¿‹î‚ğg‚¤‚Ì‚©
 bool IsSelectPromPiece(bool Hand);								// ¬‚è‹îŠÖ˜A
 bool IsCheck();													// ‰¤è/‹l‚İ‚©‚Ç‚¤‚©
 void NowHandDisp(bool Hand);									// ¡‚Ìè‚Ì•\¦
 void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM]);				// «Šû”Õ•`‰æ
 void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][EPiece::King]);			// ‚¿‹î‚Ì•\¦
-void RecordsDraw();												// •Û‘¶‚µ‚½‹L˜^‚Ì•\¦
+void RecordsDraw(bool Hand);									// •Û‘¶‚µ‚½‹L˜^‚Ì•\¦
 
 #endif /* __SHOGI_H__ */
 
