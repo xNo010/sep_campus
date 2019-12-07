@@ -21,12 +21,6 @@ enum EPiece			// 駒の種類
 	Rook,
 	Pawn,
 	King,
-	PromSilver,
-	PromKnight,
-	PromLance,
-	PromPawn,
-	PromBishop,
-	PromRook,
 	MaxPiece
 };
 
@@ -74,13 +68,13 @@ struct POSITION		// 座標
 
 struct RECORDINFO
 {
-	bool Hand;		// false:先手 true:後手
+	bool Which;	// false:先手 true:後手
 	POSITION Pos;	// 座標
 	int32_t Piece;	// 駒の種類
 	
 	struct RECORDINFO()
 	{
-		Hand = false;
+		Which = false;
 		Pos = { 0, 0 };
 		Piece = EPiece::None;
 	}
@@ -89,12 +83,12 @@ struct RECORDINFO
 std::string Kanji[9];											// 漢字格納文字列
 int32_t PieceMap[VERT_NUM][HORI_NUM];							// 将棋盤
 int32_t WhichHand;												// 合計手数
-bool NowHand;													// 今が先手か後手か
+bool NowHand;													// 今が先手か後手かの判断
 POSITION TopPiecePos[EHand::MaxHand][HORI_NUM];					// 先手後手それぞれの一番上の駒座標
-int32_t NowTopHoriNum[EHand::MaxHand];							// 自身の駒が同じ行に何個あるか
-POSITION SelectPiecePos[EHand::MaxHand];						// 「待った」用駒選択座標
+int32_t NowTopHoriNum[EHand::MaxHand];							// 判別の際、駒が同じ行に何個あるか
+POSITION SaveInputPos[EHand::MaxHand];							// 「待った」用駒選択座標
 POSITION MoveInputPos[EHand::MaxHand];							// 「待った」用移動座標
-int32_t BackSavePiece[EHand::MaxHand];							// 待った用、その手で持ち駒を獲得してたら相手に戻す
+int32_t BackSavePiece[EHand::MaxHand];							// 待ったをした際、その手で持ち駒を獲得してたら戻してやる
 int32_t CapturedPieceNum[EHand::MaxHand][EPiece::King];			// 持ち駒格納変数
 RECORDINFO InputRecord[EHand::MaxHand];							// 入力された記録
 RECORDINFO SaveRecord[MAX_SAVE];								// 入力した記録を保存する
@@ -111,9 +105,9 @@ bool CapPieceConfirm(POSITION InputPos, bool Hand);				// 持ち駒となるかの確認
 bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][EPiece::King],
 										bool Hand);				// 持ち駒を使うのか
 bool IsSelectPromPiece(bool Hand);								// 成り駒関連
-bool IsCheck(bool Hand);										// 王手/詰みかどうか
+bool IsCheck();													// 王手/詰みかどうか
 void NowHandDisp(bool Hand);									// 今の手の表示
-void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM], bool Hand);		// 将棋盤描画
+void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM]);				// 将棋盤描画
 void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][EPiece::King]);			// 持ち駒の表示
 void RecordsDraw(bool Hand);									// 保存した記録の表示
