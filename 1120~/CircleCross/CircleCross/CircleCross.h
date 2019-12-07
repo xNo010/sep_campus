@@ -27,8 +27,8 @@ struct INPUTINFO
 	int32_t VertSelect;
 };
 
-int32_t CheckMap[HALF_MAP_HEIGHT][HALF_MAP_WIDTH];
-int32_t DrawMap[MAP_HEIGHT][MAP_WIDTH];
+EChipCate CheckMap[HALF_MAP_HEIGHT][HALF_MAP_WIDTH];
+EChipCate DrawMap[MAP_HEIGHT][MAP_WIDTH];
 INPUTINFO Input;
 int32_t HoriPos;
 int32_t VertPos;
@@ -41,9 +41,9 @@ void InputFunc();
 void Update();
 bool Again();
 void Draw();
-bool SelectedCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, int32_t Vert);
-bool FinishCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandCount);
-bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
-bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
+bool SelectedCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, int32_t Vert);
+bool FinishCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandCount);
+bool MatrixCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
+bool ObliqueCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
 
 #endif /* __CIRCLECROSS_H__ */

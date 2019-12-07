@@ -25,9 +25,9 @@ void Initialize()
 	TotalSelected = 0;
 	NowTurn = true;
 
-	for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+	for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 	{
-		for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+		for (int32_t j = 0; j < CHECKMAP_WIDTH; j++)
 		{
 			CheckMap[i][j] = EChipCate::Square;
 		}
@@ -81,6 +81,7 @@ void InputFunc()
 
 	printf("縦番号の入力(1,2,3):");
 	scanf_s("%d", &Input.VertSelect);
+	rewind(stdin);
 }
 
 void Update()
@@ -137,9 +138,9 @@ void Update()
 	NowTurn = !NowTurn;
 
 	// 判定用マップを描画マップに送る
-	for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+	for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 	{
-		for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+		for (int32_t j = 0; j < CHECKMAP_WIDTH; j++)
 		{
 			if (CheckMap[i][j] == EChipCate::Square)
 				continue;
@@ -224,7 +225,7 @@ void Draw()
 	}
 }
 
-bool SelectedCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, int32_t Vert)
+bool SelectedCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], int32_t Hori, int32_t Vert)
 {
 	// 四角でなければ選択されてる
 	if (Map[Vert][Hori] != EChipCate::Square)
@@ -235,7 +236,7 @@ bool SelectedCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, i
 	return false;
 }
 
-bool FinishCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandCount)
+bool FinishCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], int32_t WhatHandCount)
 {
 	const int32_t MaxCount = 9;
 
@@ -266,7 +267,7 @@ bool FinishCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandC
 	return false;
 }
 
-bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount)
+bool MatrixCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], const int32_t FinishCount)
 {
 	// 自分を見るのは、自分じゃないときのターン
 
@@ -274,13 +275,13 @@ bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fin
 	int32_t SelectedNum = 0;
 
 	// 縦列を軸に、横列も見る
-	int32_t HoriCount[HALF_MAP_WIDTH] = { 0, };
-	for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+	int32_t HoriCount[CHECKMAP_WIDTH] = { 0, };
+	for (int32_t j = 0; j < CHECKMAP_WIDTH; j++)
 	{
 		int32_t VertCount = 0;
 		if (!NowTurn)
 		{
-			for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+			for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 			{
 				if (Map[i][j] == EChipCate::Square)
 					continue;
@@ -304,7 +305,7 @@ bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fin
 		}
 		else
 		{
-			for (int32_t i = 0; i < HALF_MAP_HEIGHT; i++)
+			for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 			{
 				if (Map[i][j] == EChipCate::Square)
 					continue;
@@ -330,7 +331,7 @@ bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fin
 	}
 
 	// 横列の判定
-	for (int32_t j = 0; j < HALF_MAP_WIDTH; j++)
+	for (int32_t j = 0; j < CHECKMAP_WIDTH; j++)
 	{
 		if (HoriCount[j] == FinishCount)
 		{
@@ -353,17 +354,17 @@ bool MatrixCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fin
 	return false;
 }
 
-bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount)
+bool ObliqueCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], const int32_t FinishCount)
 {
 	int32_t ObliqueCount = 0;
 	int32_t InvObliqueCount = 0;
 
 	// 正斜め列
-	for (int32_t j = 0, i = 0; j < HALF_MAP_WIDTH && i < HALF_MAP_HEIGHT; j++, i++)
+	for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 	{
 		if (!NowTurn)
 		{
-			if (Map[i][j] == EChipCate::Circle)
+			if (Map[i][i] == EChipCate::Circle)
 			{
 				ObliqueCount++;
 			}
@@ -374,7 +375,7 @@ bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fi
 		}
 		else
 		{
-			if (Map[i][j] == EChipCate::Cross)
+			if (Map[i][i] == EChipCate::Cross)
 			{
 				ObliqueCount++;
 			}
@@ -400,11 +401,11 @@ bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fi
 	}
 
 	// 逆斜め列()
-	for (int32_t i = 0, j = HALF_MAP_WIDTH - 1; i < HALF_MAP_HEIGHT && j >= 0; i++, j--)
+	for (int32_t i = 0; i < CHECKMAP_HEIGHT; i++)
 	{
 		if (!NowTurn)
 		{
-			if (Map[i][j] == EChipCate::Circle)
+			if (Map[i][CHECKMAP_HEIGHT - i - 1] == EChipCate::Circle)
 			{
 				InvObliqueCount++;
 			}
@@ -415,7 +416,7 @@ bool ObliqueCheck(int32_t Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t Fi
 		}
 		else
 		{
-			if (Map[i][j] == EChipCate::Cross)
+			if (Map[i][CHECKMAP_HEIGHT - i - 1] == EChipCate::Cross)
 			{
 				InvObliqueCount++;
 			}
