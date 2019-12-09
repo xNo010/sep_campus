@@ -7,8 +7,8 @@
 
 #define MAP_HEIGHT	6
 #define MAP_WIDTH	6
-#define HALF_MAP_HEIGHT MAP_HEIGHT / 2
-#define HALF_MAP_WIDTH	MAP_WIDTH / 2
+#define CHECKMAP_HEIGHT MAP_HEIGHT / 2
+#define CHECKMAP_WIDTH	MAP_WIDTH / 2
 
 enum EChipCate
 {
@@ -27,7 +27,7 @@ struct INPUTINFO
 	int32_t VertSelect;
 };
 
-EChipCate CheckMap[HALF_MAP_HEIGHT][HALF_MAP_WIDTH];
+EChipCate CheckMap[CHECKMAP_HEIGHT][CHECKMAP_WIDTH];
 EChipCate DrawMap[MAP_HEIGHT][MAP_WIDTH];
 INPUTINFO Input;
 int32_t HoriPos;
@@ -41,9 +41,9 @@ void InputFunc();
 void Update();
 bool Again();
 void Draw();
-bool SelectedCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t Hori, int32_t Vert);
-bool FinishCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], int32_t WhatHandCount);
-bool MatrixCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
-bool ObliqueCheck(EChipCate Map[HALF_MAP_HEIGHT][HALF_MAP_WIDTH], const int32_t FinishCount);
+bool SelectedCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], int32_t Hori, int32_t Vert);
+bool FinishCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], int32_t WhatHandCount);
+bool MatrixCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], const int32_t FinishCount);
+bool ObliqueCheck(EChipCate Map[CHECKMAP_HEIGHT][CHECKMAP_WIDTH], const int32_t FinishCount);
 
 #endif /* __CIRCLECROSS_H__ */
