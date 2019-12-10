@@ -6,9 +6,11 @@
 #include <string>
 #include <Windows.h>
 
-#define VERT_NUM		9		// 縦の数
-#define HORI_NUM		9		// 横の数
-#define MAX_SAVE		100		// 最大保存数
+#define VERT_NUM		9				// 縦の数
+#define HORI_NUM		9				// 横の数
+#define OWN_AREA		(VERT_NUM - 3)	// 自陣
+#define ENEMY_AREA		(VERT_NUM / 3)	// 敵陣
+#define MAX_SAVE		100				// 最大保存数
 
 enum EPiece			// 駒の種類
 {
@@ -102,18 +104,18 @@ RECORDINFO SaveRecord[MAX_SAVE];								// 入力した記録を保存する
 void Initialize();												// 初期化
 bool InputFunc(POSITION* pPos);									// 入力関数
 void InputPos_IsPiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
-	POSITION* pInputPos, bool Hand);			// 駒があるかの判定
+							bool Hand);			// 駒があるかの判定
 bool InputPos_IsMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
-	POSITION* pInputPos, bool Hand);			// 駒が動けるかの判定
+							bool Hand);			// 駒が動けるかの判定
 void Update(bool Hand);											// 更新処理
 bool BackCheck(bool Hand);										// 「待った」の判定
-bool CapPieceConfirm(POSITION InputPos, bool Hand);				// 持ち駒となるかの確認
+bool CapPieceConfirm(POSITION MovePos, bool Hand);				// 持ち駒となるかの確認
 bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][EPiece::King],
 	bool Hand);				// 持ち駒を使うのか
 bool IsSelectPromPiece(bool Hand);								// 成り駒関連
 bool IsCheck(bool Hand);										// 王手/詰みかどうか
 void NowHandDisp(bool Hand);									// 今の手の表示
-void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM], bool Hand);		// 将棋盤描画
+void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM]);				// 将棋盤描画
 void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][EPiece::King]);			// 持ち駒の表示
 void RecordsDraw(bool Hand);									// 保存した記録の表示
