@@ -127,6 +127,7 @@ bool IsBack;													// 待ったをしたかどうか
 bool IsUseCapFunc;												// 持ち駒使用関数を呼んだかどうか
 POSITION SelectPiecePos[EHand::MaxHand];						// 待った用に先手後手分の駒選択座標
 POSITION MoveInputPos[EHand::MaxHand];							// 待った用に先手後手分の移動座標
+POSITION KingPos[EHand::MaxHand];								// 王の座標
 int32_t BackSavePiece;											// 待った用、その手で持ち駒を獲得してたら相手に戻す
 int32_t CapturedPieceNum[EHand::MaxHand][ECapPiece::MaxCap];	// 持ち駒格納変数
 RECORDINFO InputRecord;											// 入力された記録
@@ -145,12 +146,14 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap],
 	bool Hand);													// 持ち駒を使うのか
 void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
 	POSITION MovePos, bool Hand);								// 成り駒になるかの選択
-bool IsCheck(bool Hand);										// 王手/詰みかどうか
+bool IsCheckMate(int32_t ShogiBoard[VERT_NUM][HORI_NUM], 
+	POSITION KingPos, bool OppositeHand);						// 王手/詰みかどうか
 void NowHandDisp(bool Hand);									// 今の手の表示
 void Draw(int32_t ShogiBoard[VERT_NUM][HORI_NUM]);				// 将棋盤描画
 void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap]);	// 持ち駒の表示
 void RecordsDraw(bool Hand, bool IsBack);						// 保存した記録の表示
+void CheckMateDraw(bool Hand);									// 王手かの表示
 
 #endif /* __SHOGI_H__ */
 
