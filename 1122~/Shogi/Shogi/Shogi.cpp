@@ -26,6 +26,7 @@ int main()
 		}
 
 		Update(NowHand);
+		printf("\n");
 	}
 }
 
@@ -37,6 +38,7 @@ void Initialize()
 	BackSavePiece = EPiece::None;
 	ZeroMemory(SelectPiecePos, sizeof(SelectPiecePos));
 	ZeroMemory(MoveInputPos, sizeof(MoveInputPos));
+	ZeroMemory(KingPos, sizeof(KingPos));
 	ZeroMemory(CapturedPieceNum, sizeof(CapturedPieceNum));
 	ZeroMemory(SaveRecord, sizeof(SaveRecord));
 	ZeroMemory(ShogiBoard, sizeof(ShogiBoard));
@@ -55,7 +57,9 @@ void Initialize()
 		case 0:
 			// 玉/王
 			ShogiBoard[i][Center] = EnemyPieceInfo;
+			KingPos[EHand::Second] = { Center, i };
 			ShogiBoard[VERT_NUM - i - 1][Center] = OwnPieceInfo;
+			KingPos[EHand::First] = { Center, VERT_NUM - i - 1 };
 
 			OwnPieceInfo = EPiece::None;
 			EnemyPieceInfo = EPiece::Enemy_Gold - 1;
@@ -612,10 +616,18 @@ void Update(bool Hand)
 		if (!Hand)
 		{
 			ShogiBoard[MoveInputPos[!Hand].y][MoveInputPos[!Hand].x] = BackSavePiece;
+			if (PromCheck == EPiece::Own_King)
+			{
+				KingPos[!Hand] = MoveInputPos[!Hand];
+			}
 		}
 		else
 		{
 			ShogiBoard[MoveInputPos[!Hand].y][MoveInputPos[!Hand].x] = BackSavePiece + (EPiece::Enemy_Gold - 1);
+			if (PromCheck == EPiece::Enemy_King)
+			{
+				KingPos[!Hand] = MoveInputPos[!Hand];
+			}
 		}
 		// 戻した手で持ち駒を獲得していたなら、消す
 		if (CapturedPieceNum[!Hand][BackSavePiece] != ECapPiece::NoneCap)
@@ -657,6 +669,21 @@ void Update(bool Hand)
 
 	// 入力情報を参考に値の入れ替え
 	ShogiBoard[MoveInputPos[Hand].y][MoveInputPos[Hand].x] = InputRecord.Piece;
+	// 王を移動させたなら、王の座標を更新
+	if (!Hand)
+	{
+		if (InputRecord.Piece == EPiece::Own_King)
+		{
+			KingPos[Hand] = MoveInputPos[Hand];
+		}
+	}
+	else
+	{
+		if (InputRecord.Piece == EPiece::Enemy_King)
+		{
+			KingPos[Hand] = MoveInputPos[Hand];
+		}
+	}
 	POSITION NonePos = { 0, 0 };
 	// 持ち駒を置いたのでないなら
 	if (SelectPiecePos[Hand] != NonePos)
@@ -686,6 +713,12 @@ void Update(bool Hand)
 	}
 	InputRecord.IsCallPromFunc = IsCallPromFunc;
 
+	bool IsCheck = false;
+	if (IsCheckMate(ShogiBoard, KingPos[!Hand], !Hand))
+	{
+		IsCheck = true;
+	}
+
 	// 盤描画
 	Draw(ShogiBoard);
 
@@ -694,6 +727,11 @@ void Update(bool Hand)
 
 	// 棋譜描画
 	RecordsDraw(Hand, IsBack);
+
+	if (IsCheck)
+	{
+		CheckMateDraw(Hand);
+	}
 
 	// 先手後手交代
 	HandNum++;
@@ -992,58 +1030,114 @@ void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, b
 	}
 }
 
-bool IsCheck(bool Hand)
+// 王手かどうかの判定
+bool IsCheckMate(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION KingPos, bool OppositeHand)
 {
-	// 入力された駒情報から、近くに王があるか判定
-	/*switch (InputRecord[Hand].Piece)
+	int32_t PieceNum = EPiece::None;
+	// 王の上列・左側から見る
+	POSITION CheckPos = { KingPos.x - 1, KingPos.y - 1 };
+	// 盤外なら
+	if (CheckPos.y < 0)
 	{
-	case EPiece::Gold:
-	case EPiece::PromSilver:
-	case EPiece::PromKnight:
-	case EPiece::PromLance:
-	case EPiece::PromPawn:
-		if (!Hand)
+		// 中列を見る
+		CheckPos.y = KingPos.y;
+	}
+
+	for (int32_t i = CheckPos.y; i <= KingPos.y + 1; i++)
+	{
+		// 上列・下列
+		if (i == KingPos.y - 1 || i == KingPos.y + 1)
 		{
+			for (int32_t j = CheckPos.x; j <= KingPos.x + 1; j++)
+			{
+				// 盤外処理
+				if (j < 0 || HORI_NUM - 1 < j)
+					continue;
+
+				PieceNum = ShogiBoard[i][j];
+				// 何もなければ処理を飛ばす
+				if (PieceNum == EPiece::None)
+					continue;
+
+				// 左・右
+				if (j == CheckPos.x || j == KingPos.x + 1)
+				{
+					// 現在の手によって判定が変わる
+					if (!OppositeHand)
+					{
+						if (PieceNum == EPiece::Enemy_Silver || PieceNum == EPiece::Enemy_Bishop || PieceNum == EPiece::Enemy_King ||
+							(PieceNum >= Enemy_PromBishop && Enemy_PromRook >= PieceNum))
+						{
+							return true;
+						}
+					}
+					else
+					{
+						if (PieceNum == EPiece::Own_Silver || PieceNum == EPiece::Own_Bishop || PieceNum == EPiece::Own_King ||
+							(PieceNum >= Own_PromBishop && Own_PromRook >= PieceNum))
+						{
+							return true;
+						}
+					}
+				}
+				// 真ん中
+				else if (j == KingPos.x)
+				{
+					// 現在の手によって判定が変わる
+					if (!OppositeHand)
+					{
+						if (PieceNum == EPiece::Enemy_Gold || (PieceNum >= EPiece::Enemy_Rook && EPiece::Enemy_King >= PieceNum) ||
+							(PieceNum >= Enemy_PromSilver && Enemy_PromPawn >= PieceNum))
+						{
+							return true;
+						}
+					}
+					else
+					{
+						if (PieceNum == EPiece::Own_Gold || (PieceNum >= EPiece::Own_Rook && EPiece::Own_King >= PieceNum) ||
+							(PieceNum >= Own_PromSilver && Own_PromPawn >= PieceNum))
+						{
+							return true;
+						}
+					}
+				}
+			}
 		}
-		else
+		// 中列
+		else if (i == KingPos.y)
 		{
+			for (int32_t j = CheckPos.x; j <= KingPos.x + 1; j += 2)
+			{
+				// 盤外処理
+				if (j < 0 || HORI_NUM - 1 < j)
+					continue;
+
+				PieceNum = ShogiBoard[i][j];
+				// 何もなければ処理を飛ばす
+				if (PieceNum == EPiece::None)
+					continue;
+
+				// 左・右
+				// 現在の手によって判定が変わる
+				if (!OppositeHand)
+				{
+					if (PieceNum == EPiece::Enemy_Gold || PieceNum == EPiece::Enemy_Rook || PieceNum == EPiece::Enemy_King ||
+						(PieceNum >= Enemy_PromSilver && Enemy_PromPawn >= PieceNum))
+					{
+						return true;
+					}
+				}
+				else
+				{
+					if (PieceNum == EPiece::Own_Gold || PieceNum == EPiece::Own_Rook || PieceNum == EPiece::Own_King ||
+						(PieceNum >= Own_PromSilver && Own_PromPawn >= PieceNum))
+					{
+						return true;
+					}
+				}
+			}
 		}
-		break;
-	case EPiece::Silver:
-		if (!Hand)
-		{
-		}
-		else
-		{
-		}
-		break;
-	case EPiece::Knight:
-		if (!Hand)
-		{
-		}
-		else
-		{
-		}
-		break;
-	case EPiece::Lance:
-		if (!Hand)
-		{
-		}
-		else
-		{
-		}
-		break;
-	case EPiece::Bishop:
-		break;
-	case EPiece::PromBishop:
-		break;
-	case EPiece::Rook:
-		break;
-	case EPiece::Pawn:
-		break;
-	default:
-		break;
-	}*/
+	}
 
 	return false;
 }
@@ -1352,5 +1446,18 @@ void RecordsDraw(bool Hand, bool IsBack)
 			printf("\n");
 		}
 	}
+}
+
+// 王手かの表示
+void CheckMateDraw(bool Hand)
+{
 	printf("\n");
+	if (!Hand)
+	{
+		printf("先手:王手です\n");
+	}
+	else
+	{
+		printf("後手:王手です\n");
+	}
 }
