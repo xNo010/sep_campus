@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef __SHOGI_H__
 #define __SHOGI_H__
 
@@ -6,15 +6,50 @@
 #include <string>
 #include <Windows.h>
 
-#define VERT_NUM		9				// c‚Ì”
-#define HORI_NUM		9				// ‰¡‚Ì”
-#define OWN_AREA		(VERT_NUM - 3)	// ©w
-#define ENEMY_AREA		(VERT_NUM / 3)	// “Gw
-#define MAX_SAVE		100				// Å‘å•Û‘¶”
+#define VERT_NUM		9					// ç¸¦ã®æ•°
+#define HORI_NUM		9					// æ¨ªã®æ•°
+#define OWN_AREA		(VERT_NUM - 3)		// è‡ªé™£
+#define ENEMY_AREA		(VERT_NUM / 3 - 1)	// æ•µé™£
+#define PROM_DIFF		7					// æˆã‚‹éš›ã®é§’ç•ªå·å·®åˆ†
+#define MAX_SAVE		100					// æœ€å¤§ä¿å­˜æ•°
 
-enum EPiece			// ‹î‚Ìí—Ş
+enum EPiece			// é§’ã®ç¨®é¡
 {
 	None,
+	Own_Gold,
+	Own_Silver,
+	Own_Knight,
+	Own_Lance,
+	Own_Bishop,
+	Own_Rook,
+	Own_Pawn,
+	Own_King,
+	Own_PromSilver,
+	Own_PromKnight,
+	Own_PromLance,
+	Own_PromBishop,
+	Own_PromRook,
+	Own_PromPawn,
+	Enemy_Gold,
+	Enemy_Silver,
+	Enemy_Knight,
+	Enemy_Lance,
+	Enemy_Bishop,
+	Enemy_Rook,
+	Enemy_Pawn,
+	Enemy_King,
+	Enemy_PromSilver,
+	Enemy_PromKnight,
+	Enemy_PromLance,
+	Enemy_PromBishop,
+	Enemy_PromRook,
+	Enemy_PromPawn,
+	MaxPiece
+};
+
+enum ECapPiece
+{
+	NoneCap,
 	Gold,
 	Silver,
 	Knight,
@@ -22,24 +57,17 @@ enum EPiece			// ‹î‚Ìí—Ş
 	Bishop,
 	Rook,
 	Pawn,
-	King,
-	PromSilver,
-	PromKnight,
-	PromLance,
-	PromPawn,
-	PromBishop,
-	PromRook,
-	MaxPiece
+	MaxCap
 };
 
-enum EHand			// æèŒãè
+enum EHand			// å…ˆæ‰‹å¾Œæ‰‹
 {
 	First,
 	Second,
 	MaxHand
 };
 
-struct POSITION		// À•W
+struct POSITION		// åº§æ¨™
 {
 	int32_t x;
 	int32_t y;
@@ -76,56 +104,60 @@ struct POSITION		// À•W
 
 struct RECORDINFO
 {
-	bool Hand;		// false:æè true:Œãè
-	POSITION Pos;	// À•W
-	int32_t Piece;	// ‹î‚Ìí—Ş
+	bool Hand;				// false:å…ˆæ‰‹ true:å¾Œæ‰‹
+	POSITION Pos;			// åº§æ¨™
+	int32_t Piece;			// é§’ã®ç¨®é¡
+	bool IsCallPromFunc;	// æˆé§’é–¢æ•°ã‚’å‘¼ã‚“ã ã‹ã©ã†ã‹ã®æœ‰ç„¡
+	bool IsProm;			// æˆã£ãŸã‹ã©ã†ã‹ã®æœ‰ç„¡
 
 	struct RECORDINFO()
 	{
 		Hand = false;
 		Pos = { 0, 0 };
 		Piece = EPiece::None;
+		IsCallPromFunc = IsProm = false;
 	}
 };
 
-std::string Kanji[9];											// Š¿šŠi”[•¶š—ñ
-int32_t PieceMap[VERT_NUM][HORI_NUM];							// «Šû”Õ
-int32_t WhichHand;												// ‡Œvè”
-bool NowHand;													// ¡‚ªæè‚©Œãè‚©
-POSITION TopPiecePos[EHand::MaxHand][HORI_NUM];					// æèŒãè‚»‚ê‚¼‚ê‚Ìˆê”Ôã‚Ì‹îÀ•W
-int32_t NowTopHoriNum[EHand::MaxHand];							// ©g‚Ì‹î‚ª“¯‚¶s‚É‰½ŒÂ‚ ‚é‚©
-POSITION SelectPiecePos[EHand::MaxHand];						// u‘Ò‚Á‚½v—p‹î‘I‘ğÀ•W
-POSITION MoveInputPos[EHand::MaxHand];							// u‘Ò‚Á‚½v—pˆÚ“®À•W
-int32_t BackSavePiece[EHand::MaxHand];							// ‘Ò‚Á‚½—pA‚»‚Ìè‚Å‚¿‹î‚ğŠl“¾‚µ‚Ä‚½‚ç‘Šè‚É–ß‚·
-int32_t CapturedPieceNum[EHand::MaxHand][EPiece::King];			// ‚¿‹îŠi”[•Ï”
-RECORDINFO InputRecord[EHand::MaxHand];							// “ü—Í‚³‚ê‚½‹L˜^
-RECORDINFO SaveRecord[MAX_SAVE];								// “ü—Í‚µ‚½‹L˜^‚ğ•Û‘¶‚·‚é
+std::string Kanji[VERT_NUM];									// æ¼¢å­—æ ¼ç´æ–‡å­—åˆ—
+int32_t ShogiBoard[VERT_NUM][HORI_NUM];							// å°†æ£‹ç›¤
+int32_t HandNum;												// åˆè¨ˆæ‰‹æ•°
+bool NowHand;													// ä»ŠãŒå…ˆæ‰‹ã‹å¾Œæ‰‹ã‹
+bool IsBack;													// å¾…ã£ãŸã‚’ã—ãŸã‹ã©ã†ã‹
+bool IsUseCapFunc;												// æŒã¡é§’ä½¿ç”¨é–¢æ•°ã‚’å‘¼ã‚“ã ã‹ã©ã†ã‹
+POSITION SelectPiecePos[EHand::MaxHand];						// å¾…ã£ãŸç”¨ã«å…ˆæ‰‹å¾Œæ‰‹åˆ†ã®é§’é¸æŠåº§æ¨™
+POSITION MoveInputPos[EHand::MaxHand];							// å¾…ã£ãŸç”¨ã«å…ˆæ‰‹å¾Œæ‰‹åˆ†ã®ç§»å‹•åº§æ¨™
+int32_t BackSavePiece;											// å¾…ã£ãŸç”¨ã€ãã®æ‰‹ã§æŒã¡é§’ã‚’ç²å¾—ã—ã¦ãŸã‚‰ç›¸æ‰‹ã«æˆ»ã™
+int32_t CapturedPieceNum[EHand::MaxHand][ECapPiece::MaxCap];	// æŒã¡é§’æ ¼ç´å¤‰æ•°
+RECORDINFO InputRecord;											// å…¥åŠ›ã•ã‚ŒãŸè¨˜éŒ²
+RECORDINFO SaveRecord[MAX_SAVE];								// å…¥åŠ›ã—ãŸè¨˜éŒ²ã‚’ä¿å­˜ã™ã‚‹
 
-void Initialize();												// ‰Šú‰»
-bool InputFunc(POSITION* pPos);									// “ü—ÍŠÖ”
-void InputPos_IsPiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
-							bool Hand);			// ‹î‚ª‚ ‚é‚©‚Ì”»’è
-bool InputPos_IsMovePiece(int32_t PieceMap[VERT_NUM][HORI_NUM],
-							bool Hand);			// ‹î‚ª“®‚¯‚é‚©‚Ì”»’è
-void Update(bool Hand);											// XVˆ—
-bool BackCheck(bool Hand);										// u‘Ò‚Á‚½v‚Ì”»’è
-bool CapPieceConfirm(POSITION MovePos, bool Hand);				// ‚¿‹î‚Æ‚È‚é‚©‚ÌŠm”F
-bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][EPiece::King],
-	bool Hand);				// ‚¿‹î‚ğg‚¤‚Ì‚©
-bool IsSelectPromPiece(bool Hand);								// ¬‚è‹îŠÖ˜A
-bool IsCheck(bool Hand);										// ‰¤è/‹l‚İ‚©‚Ç‚¤‚©
-void NowHandDisp(bool Hand);									// ¡‚Ìè‚Ì•\¦
-void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM]);				// «Šû”Õ•`‰æ
+void Initialize();												// åˆæœŸåŒ–
+bool InputFunc(POSITION* pPos);									// å…¥åŠ›é–¢æ•°
+bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
+							bool Hand);							// é§’ãŒã‚ã‚‹ã‹ã®åˆ¤å®š
+bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
+							bool Hand);							// é§’ãŒå‹•ã‘ã‚‹ã‹ã®åˆ¤å®š
+void Update(bool Hand);											// æ›´æ–°å‡¦ç†
+bool BackCheck(bool Hand);										// ã€Œå¾…ã£ãŸã€ã®åˆ¤å®š
+bool CapPieceConfirm(POSITION MovePos, bool Hand);				// æŒã¡é§’ã¨ãªã‚‹ã‹ã®ç¢ºèª
+bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap],
+	bool Hand);													// æŒã¡é§’ã‚’ä½¿ã†ã®ã‹
+void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
+	POSITION MovePos, bool Hand);								// æˆã‚Šé§’ã«ãªã‚‹ã‹ã®é¸æŠ
+bool IsCheck(bool Hand);										// ç‹æ‰‹/è©°ã¿ã‹ã©ã†ã‹
+void NowHandDisp(bool Hand);									// ä»Šã®æ‰‹ã®è¡¨ç¤º
+void Draw(int32_t ShogiBoard[VERT_NUM][HORI_NUM]);				// å°†æ£‹ç›¤æç”»
 void CapPieceDraw(
-	int32_t CapPieceNum[EHand::MaxHand][EPiece::King]);			// ‚¿‹î‚Ì•\¦
-void RecordsDraw(bool Hand);									// •Û‘¶‚µ‚½‹L˜^‚Ì•\¦
+	int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap]);	// æŒã¡é§’ã®è¡¨ç¤º
+void RecordsDraw(bool Hand, bool IsBack);						// ä¿å­˜ã—ãŸè¨˜éŒ²ã®è¡¨ç¤º
 
 #endif /* __SHOGI_H__ */
 
-// ƒƒ‚ Œrü‘f•Ğ
-// „Ÿ „ 
-// „¡ „¢
-// „£ „¤
-// „¥ „¦
-// „§ „¨ 
-// „©
+// ãƒ¡ãƒ¢ ç½«ç·šç´ ç‰‡
+// â”€ â”‚
+// â”Œ â”
+// â”˜ â””
+// â”œ â”¬
+// â”¤ â”´ 
+// â”¼
