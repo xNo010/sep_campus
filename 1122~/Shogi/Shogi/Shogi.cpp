@@ -603,36 +603,37 @@ void Update(bool Hand)
 	if (!IsBack && BackCheck(Hand))
 	{
 		// 今の手と逆の手の情報を書きかえる
+		bool OppoHand = !Hand;
 		// その手で成っていたら戻す
-		int32_t PromCheck = ShogiBoard[MoveInputPos[!Hand].y][MoveInputPos[!Hand].x];
+		int32_t PromCheck = ShogiBoard[MoveInputPos[OppoHand].y][MoveInputPos[OppoHand].x];
 		if ((PromCheck >= EPiece::Own_PromSilver && EPiece::Own_PromPawn >= PromCheck) ||
 			(PromCheck >= EPiece::Enemy_PromSilver && EPiece::Enemy_PromPawn >= PromCheck))
 		{
 			PromCheck -= PROM_DIFF;
 		}
 		// 元いた位置・元の駒に戻す
-		ShogiBoard[SelectPiecePos[!Hand].y][SelectPiecePos[!Hand].x] = PromCheck;
+		ShogiBoard[SelectPiecePos[OppoHand].y][SelectPiecePos[OppoHand].x] = PromCheck;
 		// 保存した駒情報を入れる
 		if (!Hand)
 		{
-			ShogiBoard[MoveInputPos[!Hand].y][MoveInputPos[!Hand].x] = BackSavePiece;
+			ShogiBoard[MoveInputPos[OppoHand].y][MoveInputPos[OppoHand].x] = BackSavePiece + (EPiece::Enemy_Gold - 1);
 			if (PromCheck == EPiece::Own_King)
 			{
-				KingPos[!Hand] = MoveInputPos[!Hand];
+				KingPos[OppoHand] = MoveInputPos[OppoHand];
 			}
 		}
 		else
 		{
-			ShogiBoard[MoveInputPos[!Hand].y][MoveInputPos[!Hand].x] = BackSavePiece + (EPiece::Enemy_Gold - 1);
+			ShogiBoard[MoveInputPos[OppoHand].y][MoveInputPos[OppoHand].x] = BackSavePiece;
 			if (PromCheck == EPiece::Enemy_King)
 			{
-				KingPos[!Hand] = MoveInputPos[!Hand];
+				KingPos[OppoHand] = MoveInputPos[OppoHand];
 			}
 		}
 		// 戻した手で持ち駒を獲得していたなら、消す
-		if (CapturedPieceNum[!Hand][BackSavePiece] != ECapPiece::NoneCap)
+		if (CapturedPieceNum[OppoHand][BackSavePiece] != ECapPiece::NoneCap)
 		{
-			CapturedPieceNum[!Hand][BackSavePiece]--;
+			CapturedPieceNum[OppoHand][BackSavePiece]--;
 		}
 
 		// 盤描画
@@ -650,7 +651,7 @@ void Update(bool Hand)
 		}
 
 		// 今の手と逆にする
-		NowHand = !Hand;
+		NowHand = OppoHand;
 
 		// 持ち駒関数を呼んだ情報をリセット
 		IsUseCapFunc = false;
@@ -665,26 +666,27 @@ void Update(bool Hand)
 
 	// 先手か後手かの情報 + 移動座標を入れる
 	InputRecord.Hand = Hand;
-	InputRecord.Pos = MoveInputPos[Hand];
+	InputRecord.SelectPos = SelectPiecePos[Hand];
+	InputRecord.MovePos = MoveInputPos[Hand];
 
 	// 入力情報を参考に値の入れ替え
-	ShogiBoard[MoveInputPos[Hand].y][MoveInputPos[Hand].x] = InputRecord.Piece;
+	ShogiBoard[InputRecord.MovePos.y][InputRecord.MovePos.x] = InputRecord.Piece;
 	// 王を移動させたなら、王の座標を更新
 	if (!Hand)
 	{
 		if (InputRecord.Piece == EPiece::Own_King)
 		{
-			KingPos[Hand] = MoveInputPos[Hand];
+			KingPos[Hand] = InputRecord.MovePos;
 		}
 	}
 	else
 	{
 		if (InputRecord.Piece == EPiece::Enemy_King)
 		{
-			KingPos[Hand] = MoveInputPos[Hand];
+			KingPos[Hand] = InputRecord.MovePos;
 		}
 	}
-	POSITION NonePos = { 0, 0 };
+	POSITION NonePos = { -1, -1 };
 	// 持ち駒を置いたのでないなら
 	if (SelectPiecePos[Hand] != NonePos)
 	{
@@ -693,12 +695,13 @@ void Update(bool Hand)
 
 	// 成駒のチェック
 	bool IsCallPromFunc = false;
+	bool IsProm = false;
 	if (!Hand)
 	{
 		// 相手の陣地に入っている場合関数を呼ぶ
 		if (MoveInputPos[Hand].y <= ENEMY_AREA)
 		{
-			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], Hand);
+			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], IsProm, Hand);
 			IsCallPromFunc = true;
 		}
 	}
@@ -707,11 +710,12 @@ void Update(bool Hand)
 		// 相手の陣地に入っている場合関数を呼ぶ
 		if (MoveInputPos[Hand].y >= OWN_AREA)
 		{
-			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], Hand);
+			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], IsProm, Hand);
 			IsCallPromFunc = true;
 		}
 	}
 	InputRecord.IsCallPromFunc = IsCallPromFunc;
+	InputRecord.IsProm = IsProm;
 
 	bool IsCheck = false;
 	if (IsCheckMate(ShogiBoard, KingPos[!Hand], !Hand))
@@ -719,14 +723,23 @@ void Update(bool Hand)
 		IsCheck = true;
 	}
 
+	// 棋譜描画
+	RecordsDraw(Hand, IsBack);
+
+	int32_t OutputCheck;
+	printf("\n棋譜情報ファイルを作成しますか？(0:する、1:しない):");
+	scanf_s("%d", &OutputCheck);
+	rewind(stdin);
+	if (OutputCheck == 0)
+	{
+		WriteOutputRecord("RecordData\\GameRecord.txt", SaveRecord, HandNum);
+	}
+
 	// 盤描画
 	Draw(ShogiBoard);
 
 	// 持ち駒描画
 	CapPieceDraw(CapturedPieceNum);
-
-	// 棋譜描画
-	RecordsDraw(Hand, IsBack);
 
 	if (IsCheck)
 	{
@@ -959,7 +972,7 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 		InputRecord.Piece = UseCheck + EPiece::Enemy_Gold - 1;
 	}
 	// 範囲外とする
-	SelectPiecePos[Hand] = { 0, 0 };
+	SelectPiecePos[Hand] = { -1, -1 };
 
 	// どこに置くかの選択
 	bool IsSuccess = false;
@@ -986,10 +999,10 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 }
 
 // 成り駒となるか
-void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, bool Hand)
+void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, bool IsProm, bool Hand)
 {
 	int32_t PieceNum = ShogiBoard[MovePos.y][MovePos.x];
-	POSITION NonePos = { 0, 0 };
+	POSITION NonePos = { -1, -1 };
 	// 持ち駒の場合、成らない
 	if (SelectPiecePos[Hand] == NonePos)
 	{
@@ -1020,12 +1033,12 @@ void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, b
 		// 成駒に変更
 		PieceNum += PROM_DIFF;
 		ShogiBoard[MovePos.y][MovePos.x] = PieceNum;
-		InputRecord.IsProm = true;
+		IsProm = true;
 	}
 	else
 	{
 		// 成らない
-		InputRecord.IsProm = false;
+		IsProm = false;
 		return;
 	}
 }
@@ -1183,7 +1196,7 @@ void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM])
 				HoriStr += "□│";
 				continue;
 			}
-			else if (PieceMap[i][j] <= EPiece::Own_PromRook)
+			else if (PieceMap[i][j] <= EPiece::Own_PromPawn)
 			{
 				// 赤
 				HoriStr += "\x1b[31m";
@@ -1405,7 +1418,7 @@ void RecordsDraw(bool Hand, bool IsBack)
 		}
 
 		std::string HandRecord = "";
-		if (i % 2 == 0)
+		if (!SaveRecord[i].Hand)
 		{
 			HandRecord += "▲";
 		}
@@ -1415,13 +1428,13 @@ void RecordsDraw(bool Hand, bool IsBack)
 		}
 
 		// iが0以降、前のPosと一致していたら表記変更
-		if (i > 0 && SaveRecord[i].Pos == SaveRecord[i - 1].Pos)
+		if (i > 0 && SaveRecord[i].MovePos == SaveRecord[i - 1].MovePos)
 		{
 			printf("%s同%s", HandRecord.c_str(), PieceCate.c_str());
 		}
 		else
 		{
-			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].Pos.x + 1, Kanji[SaveRecord[i].Pos.y].c_str(), PieceCate.c_str());
+			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].MovePos.x + 1, Kanji[SaveRecord[i].MovePos.y].c_str(), PieceCate.c_str());
 		}
 
 		if (SaveRecord[i].IsCallPromFunc)
@@ -1460,4 +1473,51 @@ void CheckMateDraw(bool Hand)
 	{
 		printf("後手:王手です\n");
 	}
+}
+
+// 棋譜データの出力
+void WriteOutputRecord(const char* pFileName, RECORDINFO Record[MAX_SAVE], int32_t HandNum)
+{
+	FILE* fp;
+	errno_t ErrCheck;
+
+	// ファイルの作成
+	ErrCheck = fopen_s(&fp, pFileName, "wt");
+
+	// エラー処理
+	if (ErrCheck != 0 || fp == NULL)
+	{
+		printf("ファイルを作成できませんでした。\n");
+		exit(ErrCheck);
+	}
+	else
+	{
+		printf("ファイルを作成しました。\n\n");
+	}
+
+	// ファイルに書き込み
+	int32_t temp;
+	temp = HandNum + 1;
+	for (int32_t i = 0; i < temp; i++)
+	{
+		// 先手か後手か
+		fprintf_s(fp, "%s, ", Record[i].Hand ? "true" : "false");
+		// 駒移動座標
+		fprintf_s(fp, "%d, %d, ", Record[i].SelectPos.x, Record[i].SelectPos.y);
+		// 駒移動座標
+		fprintf_s(fp, "%d, %d, ", Record[i].MovePos.x, Record[i].MovePos.y);
+		// 駒種類
+		fprintf_s(fp, "%d, ", Record[i].Piece);
+		// 成駒関数を呼んだかどうか
+		fprintf_s(fp, "%s, ", Record[i].IsCallPromFunc ? "true" : "false");
+		// 成ったかどうか
+		fprintf_s(fp, "%s, ", Record[i].IsProm ? "true" : "false");
+		// 次のデータ入力の為改行
+		fprintf(fp, "\n");
+	}
+
+	// ファイルを閉じる
+	fclose(fp);
+
+	Sleep(1000);
 }
