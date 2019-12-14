@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
+#include <stdio.h>
 
 #define VERT_NUM		9					// 縦の数
 #define HORI_NUM		9					// 横の数
@@ -105,7 +106,8 @@ struct POSITION		// 座標
 struct RECORDINFO
 {
 	bool Hand;				// false:先手 true:後手
-	POSITION Pos;			// 座標
+	POSITION SelectPos;		// 駒選択座標
+	POSITION MovePos;		// 駒移動座標
 	int32_t Piece;			// 駒の種類
 	bool IsCallPromFunc;	// 成駒関数を呼んだかどうかの有無
 	bool IsProm;			// 成ったかどうかの有無
@@ -113,7 +115,8 @@ struct RECORDINFO
 	struct RECORDINFO()
 	{
 		Hand = false;
-		Pos = { 0, 0 };
+		SelectPos = { 0, 0 };
+		MovePos = { 0, 0 };
 		Piece = EPiece::None;
 		IsCallPromFunc = IsProm = false;
 	}
@@ -145,7 +148,7 @@ bool CapPieceConfirm(POSITION MovePos, bool Hand);				// 持ち駒となるか�
 bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap],
 	bool Hand);													// 持ち駒を使うのか
 void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
-	POSITION MovePos, bool Hand);								// 成り駒になるかの選択
+	POSITION MovePos, bool IsProm, bool Hand);					// 成り駒になるかの選択
 bool IsCheckMate(int32_t ShogiBoard[VERT_NUM][HORI_NUM], 
 	POSITION KingPos, bool OppositeHand);						// 王手/詰みかどうか
 void NowHandDisp(bool Hand);									// 今の手の表示
@@ -154,6 +157,8 @@ void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap]);	// 持ち駒の表示
 void RecordsDraw(bool Hand, bool IsBack);						// 保存した記録の表示
 void CheckMateDraw(bool Hand);									// 王手かの表示
+void WriteOutputRecord(const char* pFileName, RECORDINFO Output[MAX_SAVE],
+	int32_t HandNum);											// 棋譜データの出力
 
 #endif /* __SHOGI_H__ */
 
