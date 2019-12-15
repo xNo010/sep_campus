@@ -121,6 +121,18 @@ bool InputFunc(POSITION* pPos)
 	return true;
 }
 
+// 列数値の変換(配列用)
+void HoriConv_ForArray(int32_t* HoriPos)
+{
+	*HoriPos = HORI_NUM + 1 - *HoriPos;
+}
+
+// 列数値の変換(表示用)
+void HoriConv_ForDisp(int32_t* HoriPos)
+{
+	*HoriPos = HORI_NUM + 1 - *HoriPos;
+}
+
 // 駒があるかどうかのチェック
 bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 {
@@ -133,6 +145,9 @@ bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 		printf("そこは盤の外です\n");
 		return false;
 	}
+
+	// 列に関しては、右から左で1～9となるので、配列用に値を変換
+	HoriConv_ForArray(&InputPos.x);
 
 	// 駒がなければやり直し
 	if (ShogiBoard[--InputPos.y][--InputPos.x] == EPiece::None)
@@ -181,6 +196,9 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 		printf("そこは盤の外です\n");
 		return false;
 	}
+
+	// 列に関しては、右から左で1～9となるので、配列用に値を変換
+	HoriConv_ForArray(&InputPos.x);
 
 	// 判定用に更新
 	InputPos.x--, InputPos.y--;
@@ -722,6 +740,10 @@ void Update(bool Hand)
 	{
 		IsCheck = true;
 	}
+
+	// 列に関しては、右から左で1～9となるので、表示用に値を変換
+	HoriConv_ForDisp(&++InputRecord.SelectPos.x);
+	HoriConv_ForDisp(&++InputRecord.MovePos.x);
 
 	// 棋譜描画
 	RecordsDraw(Hand, IsBack);
@@ -1274,7 +1296,7 @@ void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM])
 		}
 	}
 
-	printf("　　1　　2　　3　　4　　5　　6　　7　　8　　9\n");
+	printf("　　9　　8　　7　　6　　5　　4　　3　　2　　1\n");
 	printf("　┌───┐┌───┐┌───┐┌───┐┌───┐┌───┐┌───┐┌───┐┌───┐\n");
 	printf("%s", HoriStr.c_str());
 }
@@ -1434,7 +1456,7 @@ void RecordsDraw(bool Hand, bool IsBack)
 		}
 		else
 		{
-			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].MovePos.x + 1, Kanji[SaveRecord[i].MovePos.y].c_str(), PieceCate.c_str());
+			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].MovePos.x, Kanji[SaveRecord[i].MovePos.y].c_str(), PieceCate.c_str());
 		}
 
 		if (SaveRecord[i].IsCallPromFunc)
