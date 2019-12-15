@@ -14,7 +14,7 @@ int main()
 		NowHandDisp(NowHand);
 
 		// 持ち駒の使用有無(使わないと選択した以降は呼ばない)
-		if (!IsUseCapFunc && !IsUseCapPiece(CapturedPieceNum, NowHand))
+		if (IsUseCapFunc || !IsUseCapPiece(CapturedPieceNum, NowHand))
 		{
 			// 駒がある座標・駒を動かす座標を指定
 			if (!InputPos_IsPiece(ShogiBoard, NowHand) || !InputPos_IsMovePiece(ShogiBoard, NowHand))
@@ -472,7 +472,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 右方向検索
 				for (int32_t i = SelectPiecePos[Hand].x + 1; i < InputPos.x; i++)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[InputPos.y][i] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -484,7 +484,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 左方向検索
 				for (int32_t i = SelectPiecePos[Hand].x - 1; i > InputPos.x; i--)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[InputPos.y][i] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -496,7 +496,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 上方向検索
 				for (int32_t i = SelectPiecePos[Hand].y - 1; i > InputPos.y; i--)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[i][InputPos.x] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -508,7 +508,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 下方向検索
 				for (int32_t i = SelectPiecePos[Hand].y + 1; i < InputPos.y; i++)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[i][InputPos.x] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -532,7 +532,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 右方向検索
 				for (int32_t i = SelectPiecePos[Hand].x + 1; i < InputPos.x; i++)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[InputPos.y][i] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -544,7 +544,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 左方向検索
 				for (int32_t i = SelectPiecePos[Hand].x - 1; i > InputPos.x; i--)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[InputPos.y][i] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -556,7 +556,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 上方向検索
 				for (int32_t i = SelectPiecePos[Hand].y - 1; i > InputPos.y; i--)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[i][InputPos.x] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -568,7 +568,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 				// 下方向検索
 				for (int32_t i = SelectPiecePos[Hand].y + 1; i < InputPos.y; i++)
 				{
-					if (ShogiBoard[i][i] != EPiece::None)
+					if (ShogiBoard[i][InputPos.x] != EPiece::None)
 					{
 						printf("駒を飛び越すことはできません\n");
 						return false;
@@ -706,9 +706,9 @@ void Update(bool Hand)
 	}
 	POSITION NonePos = { -1, -1 };
 	// 持ち駒を置いたのでないなら
-	if (SelectPiecePos[Hand] != NonePos)
+	if (InputRecord.SelectPos != NonePos)
 	{
-		ShogiBoard[SelectPiecePos[Hand].y][SelectPiecePos[Hand].x] = EPiece::None;
+		ShogiBoard[InputRecord.SelectPos.y][InputRecord.SelectPos.x] = EPiece::None;
 	}
 
 	// 成駒のチェック
@@ -716,19 +716,21 @@ void Update(bool Hand)
 	bool IsProm = false;
 	if (!Hand)
 	{
-		// 相手の陣地に入っている場合関数を呼ぶ
-		if (MoveInputPos[Hand].y <= ENEMY_AREA)
+		// 持ち駒でなく、相手の陣地に入っている場合関数を呼ぶ
+		if (InputRecord.SelectPos != NonePos &&
+			InputRecord.MovePos.y <= ENEMY_AREA)
 		{
-			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], IsProm, Hand);
+			SelectPromPiece(ShogiBoard, InputRecord.MovePos, &IsProm, Hand);
 			IsCallPromFunc = true;
 		}
 	}
 	else
 	{
-		// 相手の陣地に入っている場合関数を呼ぶ
-		if (MoveInputPos[Hand].y >= OWN_AREA)
+		// 持ち駒でなく、相手の陣地に入っている場合関数を呼ぶ
+		if (InputRecord.SelectPos != NonePos && 
+			InputRecord.MovePos.y >= OWN_AREA)
 		{
-			SelectPromPiece(ShogiBoard, MoveInputPos[Hand], IsProm, Hand);
+			SelectPromPiece(ShogiBoard, InputRecord.MovePos, &IsProm, Hand);
 			IsCallPromFunc = true;
 		}
 	}
@@ -742,7 +744,11 @@ void Update(bool Hand)
 	}
 
 	// 列に関しては、右から左で1～9となるので、表示用に値を変換
-	HoriConv_ForDisp(&++InputRecord.SelectPos.x);
+	// 持ち駒を置いたのでないなら
+	if (InputRecord.SelectPos != NonePos)
+	{
+		HoriConv_ForDisp(&++InputRecord.SelectPos.x);
+	}
 	HoriConv_ForDisp(&++InputRecord.MovePos.x);
 
 	// 棋譜描画
@@ -1003,6 +1009,9 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 	{
 		if (InputFunc(&InputPos))
 		{
+			// 列に関しては、右から左で1～9となるので、配列用に値を変換
+			HoriConv_ForArray(&InputPos.x);
+
 			// 駒が置かれていたらやり直し
 			if (ShogiBoard[--InputPos.y][--InputPos.x] != EPiece::None)
 			{
@@ -1013,6 +1022,10 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 			// 成功
 			IsSuccess = true;
 		}
+		else
+		{
+			printf("そこは盤の外です\n");
+		}
 	}
 
 	// 入力情報をグローバルに保存
@@ -1021,7 +1034,7 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 }
 
 // 成り駒となるか
-void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, bool IsProm, bool Hand)
+void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, bool* IsProm, bool Hand)
 {
 	int32_t PieceNum = ShogiBoard[MovePos.y][MovePos.x];
 	POSITION NonePos = { -1, -1 };
@@ -1055,12 +1068,12 @@ void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], POSITION MovePos, b
 		// 成駒に変更
 		PieceNum += PROM_DIFF;
 		ShogiBoard[MovePos.y][MovePos.x] = PieceNum;
-		IsProm = true;
+		*IsProm = true;
 	}
 	else
 	{
 		// 成らない
-		IsProm = false;
+		*IsProm = false;
 		return;
 	}
 }
