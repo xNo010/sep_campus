@@ -150,7 +150,7 @@ bool CapPieceConfirm(POSITION MovePos, bool Hand);				// 持ち駒となるか�
 bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap],
 	bool Hand);													// 持ち駒を使うのか
 void SelectPromPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
-	POSITION MovePos, bool IsProm, bool Hand);					// 成り駒になるかの選択
+	POSITION MovePos, bool* IsProm, bool Hand);					// 成り駒になるかの選択
 bool IsCheckMate(int32_t ShogiBoard[VERT_NUM][HORI_NUM], 
 	POSITION KingPos, bool OppositeHand);						// 王手/詰みかどうか
 void NowHandDisp(bool Hand);									// 今の手の表示
