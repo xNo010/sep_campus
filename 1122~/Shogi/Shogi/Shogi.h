@@ -73,7 +73,7 @@ struct POSITION		// 座標
 	int32_t x;
 	int32_t y;
 
-	POSITION() { x = 0, y = 0; };
+	POSITION() { x = 0, y = 0; }
 
 	POSITION(int32_t ax, int32_t ay)
 	{
@@ -115,8 +115,8 @@ struct RECORDINFO
 	struct RECORDINFO()
 	{
 		Hand = false;
-		SelectPos = { 0, 0 };
-		MovePos = { 0, 0 };
+		SelectPos = { -1, -1 };
+		MovePos = { -1, -1 };
 		Piece = EPiece::None;
 		IsCallPromFunc = IsProm = false;
 	}
@@ -137,6 +137,8 @@ RECORDINFO InputRecord;											// 入力された記録
 RECORDINFO SaveRecord[MAX_SAVE];								// 入力した記録を保存する
 
 void Initialize();												// 初期化
+void HoriConv_ForArray(int32_t* HoriPos);						// 列数値の変換(配列用)
+void HoriConv_ForDisp(int32_t* HoriPos);						// 列数値の変換(表示用)
 bool InputFunc(POSITION* pPos);									// 入力関数
 bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
 							bool Hand);							// 駒があるかの判定
