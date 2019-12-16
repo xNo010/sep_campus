@@ -137,8 +137,7 @@ RECORDINFO InputRecord;											// 入力された記録
 RECORDINFO SaveRecord[MAX_SAVE];								// 入力した記録を保存する
 
 void Initialize();												// 初期化
-void HoriConv_ForArray(int32_t* HoriPos);						// 列数値の変換(配列用)
-void HoriConv_ForDisp(int32_t* HoriPos);						// 列数値の変換(表示用)
+void HoriConv(int32_t* HoriPos);								// 列数値の配列用⇔表示用変換
 bool InputFunc(POSITION* pPos);									// 入力関数
 bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM],
 							bool Hand);							// 駒があるかの判定

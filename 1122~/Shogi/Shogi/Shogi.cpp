@@ -121,14 +121,8 @@ bool InputFunc(POSITION* pPos)
 	return true;
 }
 
-// 列数値の変換(配列用)
-void HoriConv_ForArray(int32_t* HoriPos)
-{
-	*HoriPos = HORI_NUM + 1 - *HoriPos;
-}
-
-// 列数値の変換(表示用)
-void HoriConv_ForDisp(int32_t* HoriPos)
+// 列数値の配列用⇔表示用変換
+void HoriConv(int32_t* HoriPos)
 {
 	*HoriPos = HORI_NUM + 1 - *HoriPos;
 }
@@ -147,7 +141,7 @@ bool InputPos_IsPiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 	}
 
 	// 列に関しては、右から左で1～9となるので、配列用に値を変換
-	HoriConv_ForArray(&InputPos.x);
+	HoriConv(&InputPos.x);
 
 	// 駒がなければやり直し
 	if (ShogiBoard[--InputPos.y][--InputPos.x] == EPiece::None)
@@ -198,7 +192,7 @@ bool InputPos_IsMovePiece(int32_t ShogiBoard[VERT_NUM][HORI_NUM], bool Hand)
 	}
 
 	// 列に関しては、右から左で1～9となるので、配列用に値を変換
-	HoriConv_ForArray(&InputPos.x);
+	HoriConv(&InputPos.x);
 
 	// 判定用に更新
 	InputPos.x--, InputPos.y--;
@@ -747,9 +741,9 @@ void Update(bool Hand)
 	// 持ち駒を置いたのでないなら
 	if (InputRecord.SelectPos != NonePos)
 	{
-		HoriConv_ForDisp(&++InputRecord.SelectPos.x);
+		HoriConv(&++InputRecord.SelectPos.x);
 	}
-	HoriConv_ForDisp(&++InputRecord.MovePos.x);
+	HoriConv(&++InputRecord.MovePos.x);
 
 	// 棋譜描画
 	RecordsDraw(Hand, IsBack);
@@ -1010,7 +1004,7 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 		if (InputFunc(&InputPos))
 		{
 			// 列に関しては、右から左で1～9となるので、配列用に値を変換
-			HoriConv_ForArray(&InputPos.x);
+			HoriConv(&InputPos.x);
 
 			// 駒が置かれていたらやり直し
 			if (ShogiBoard[--InputPos.y][--InputPos.x] != EPiece::None)
