@@ -156,7 +156,7 @@ void NowHandDisp(bool Hand);									// 今の手の表示
 void Draw(int32_t ShogiBoard[VERT_NUM][HORI_NUM]);				// 将棋盤描画
 void CapPieceDraw(
 	int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap]);	// 持ち駒の表示
-void RecordsDraw(bool Hand, bool IsBack);						// 保存した記録の表示
+void RecordsDraw(RECORDINFO Record, bool Hand, bool IsBack);	// 保存した記録の表示
 void CheckMateDraw(bool Hand);									// 王手かの表示
 void WriteOutputRecord(const char* pFileName, RECORDINFO Output[MAX_SAVE],
 	int32_t HandNum);											// 棋譜データの出力
