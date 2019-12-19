@@ -659,7 +659,7 @@ void Update(bool Hand)
 		// 手数が0でなければ棋譜描画
 		if (HandNum != 0)
 		{
-			RecordsDraw(Hand, IsBack);
+			RecordsDraw(InputRecord, Hand, IsBack);
 		}
 
 		// 今の手と逆にする
@@ -737,16 +737,19 @@ void Update(bool Hand)
 		IsCheck = true;
 	}
 
-	// 列に関しては、右から左で1～9となるので、表示用に値を変換
+	// 列は右から左で1～9となるので、表示用に値を変換
 	// 持ち駒を置いたのでないなら
 	if (InputRecord.SelectPos != NonePos)
 	{
+		// 選択座標を表示用に更新
 		HoriConv(&++InputRecord.SelectPos.x);
+		++InputRecord.SelectPos.y;
 	}
+	// 移動座標を表示用に更新
 	HoriConv(&++InputRecord.MovePos.x);
-
+	++InputRecord.MovePos.y;
 	// 棋譜描画
-	RecordsDraw(Hand, IsBack);
+	RecordsDraw(InputRecord, Hand, IsBack);
 
 	int32_t OutputCheck;
 	printf("\n棋譜情報ファイルを作成しますか？(0:する、1:しない):");
@@ -1360,7 +1363,7 @@ void CapPieceDraw(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap])
 	}
 }
 
-void RecordsDraw(bool Hand, bool IsBack)
+void RecordsDraw(RECORDINFO Record, bool Hand, bool IsBack)
 {
 	int32_t temp = HandNum;
 	// 配列外処理
@@ -1375,7 +1378,7 @@ void RecordsDraw(bool Hand, bool IsBack)
 	// 待った からの呼び出しでなければ
 	if (!IsBack)
 	{
-		SaveRecord[temp++] = InputRecord;
+		SaveRecord[temp++] = Record;
 	}
 
 	for (int32_t i = 0; i < temp; i++)
@@ -1463,7 +1466,7 @@ void RecordsDraw(bool Hand, bool IsBack)
 		}
 		else
 		{
-			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].MovePos.x, Kanji[SaveRecord[i].MovePos.y].c_str(), PieceCate.c_str());
+			printf("%s%d%s%s", HandRecord.c_str(), SaveRecord[i].MovePos.x, Kanji[SaveRecord[i].MovePos.y - 1].c_str(), PieceCate.c_str());
 		}
 
 		if (SaveRecord[i].IsCallPromFunc)
@@ -1530,17 +1533,17 @@ void WriteOutputRecord(const char* pFileName, RECORDINFO Record[MAX_SAVE], int32
 	for (int32_t i = 0; i < temp; i++)
 	{
 		// 先手か後手か
-		fprintf_s(fp, "%s, ", Record[i].Hand ? "true" : "false");
+		fprintf_s(fp, "%s,", Record[i].Hand ? "true" : "false");
 		// 駒移動座標
-		fprintf_s(fp, "%d, %d, ", Record[i].SelectPos.x, Record[i].SelectPos.y);
+		fprintf_s(fp, "%d,%d,", Record[i].SelectPos.x, Record[i].SelectPos.y);
 		// 駒移動座標
-		fprintf_s(fp, "%d, %d, ", Record[i].MovePos.x, Record[i].MovePos.y);
+		fprintf_s(fp, "%d,%d,", Record[i].MovePos.x, Record[i].MovePos.y);
 		// 駒種類
-		fprintf_s(fp, "%d, ", Record[i].Piece);
+		fprintf_s(fp, "%d,", Record[i].Piece);
 		// 成駒関数を呼んだかどうか
-		fprintf_s(fp, "%s, ", Record[i].IsCallPromFunc ? "true" : "false");
+		fprintf_s(fp, "%s,", Record[i].IsCallPromFunc ? "true" : "false");
 		// 成ったかどうか
-		fprintf_s(fp, "%s, ", Record[i].IsProm ? "true" : "false");
+		fprintf_s(fp, "%s,", Record[i].IsProm ? "true" : "false");
 		// 次のデータ入力の為改行
 		fprintf(fp, "\n");
 	}
@@ -1548,5 +1551,6 @@ void WriteOutputRecord(const char* pFileName, RECORDINFO Record[MAX_SAVE], int32
 	// ファイルを閉じる
 	fclose(fp);
 
-	Sleep(1000);
+	// 少し待つ
+	Sleep(500);
 }
