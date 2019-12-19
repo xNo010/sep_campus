@@ -986,8 +986,8 @@ bool IsUseCapPiece(int32_t CapPieceNum[EHand::MaxHand][ECapPiece::MaxCap], bool 
 	}
 
 	CapPieceNum[Hand][UseCheck]--;
-	// 先手か後手かによって情報の入れ方が変わる
 
+	// 先手か後手かによって情報の入れ方が変わる
 	if (!Hand)
 	{
 		InputRecord.Piece = UseCheck;
@@ -1543,7 +1543,7 @@ void WriteOutputRecord(const char* pFileName, RECORDINFO Record[MAX_SAVE], int32
 		// 成駒関数を呼んだかどうか
 		fprintf_s(fp, "%s,", Record[i].IsCallPromFunc ? "true" : "false");
 		// 成ったかどうか
-		fprintf_s(fp, "%s,", Record[i].IsProm ? "true" : "false");
+		fprintf_s(fp, "%s", Record[i].IsProm ? "true" : "false");
 		// 次のデータ入力の為改行
 		fprintf(fp, "\n");
 	}
