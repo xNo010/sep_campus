@@ -1287,11 +1287,11 @@ void Draw(int32_t PieceMap[VERT_NUM][HORI_NUM])
 				break;
 			case EPiece::Own_PromBishop:
 			case EPiece::Enemy_PromBishop:
-				HoriStr += "龍";
+				HoriStr += "馬";
 				break;
 			case EPiece::Own_PromRook:
 			case EPiece::Enemy_PromRook:
-				HoriStr += "馬";
+				HoriStr += "龍";
 				break;
 			default:
 				break;
@@ -1421,7 +1421,7 @@ void RecordsDraw(RECORDINFO Record, bool Hand, bool IsBack)
 			break;
 		case EPiece::Own_PromBishop:
 		case EPiece::Enemy_PromBishop:
-			PieceCate += "龍";
+			PieceCate += "馬";
 			break;
 		case EPiece::Own_Rook:
 		case EPiece::Enemy_Rook:
@@ -1429,7 +1429,7 @@ void RecordsDraw(RECORDINFO Record, bool Hand, bool IsBack)
 			break;
 		case EPiece::Own_PromRook:
 		case EPiece::Enemy_PromRook:
-			PieceCate += "馬";
+			PieceCate += "龍";
 			break;
 		case EPiece::Own_Pawn:
 		case EPiece::Enemy_Pawn:
