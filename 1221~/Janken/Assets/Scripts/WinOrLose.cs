@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Common;
 
 public class WinOrLose : MonoBehaviour
 {
@@ -9,18 +10,18 @@ public class WinOrLose : MonoBehaviour
     public Text comHand;
 
     // 勝敗の判定
-    public string WinOrLoseCheck(Int32 mySelectNum, Int32 comSelectNum)
+    public string WinOrLoseCheck(EJANKEN_CATE mySelectNum, EJANKEN_CATE comSelectNum)
     {
         // 相手の手は何か
-        switch ((WebConnect.EJANKEN_CATE)comSelectNum)
+        switch ((EJANKEN_CATE)comSelectNum)
         {
-            case WebConnect.EJANKEN_CATE.Rock:
+            case EJANKEN_CATE.Rock:
                 comHand.text = "com:グー";
                 break;
-            case WebConnect.EJANKEN_CATE.Scissor:
+            case EJANKEN_CATE.Scissor:
                 comHand.text = "com:チョキ";
                 break;
-            case WebConnect.EJANKEN_CATE.Paper:
+            case EJANKEN_CATE.Paper:
                 comHand.text = "com:パー";
                 break;
             default:
@@ -32,7 +33,7 @@ public class WinOrLose : MonoBehaviour
         {
             str = "Result:引き分け";
         }
-        else if ((mySelectNum + 1) % 3 == comSelectNum)
+        else if ((EJANKEN_CATE)(((int)mySelectNum + 1) % 3) == comSelectNum)
         {
             str = "Result:勝ち";
         }
